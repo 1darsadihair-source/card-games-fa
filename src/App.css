@@ -63,6 +63,15 @@
 .draw-seat-left{grid-column:1;grid-row:2;align-self:center}
 .draw-seat-right{grid-column:3;grid-row:2;align-self:center}
 .draw-seat-bottom{grid-column:2;grid-row:3}
+
+/* Polished tak-keshi feedback: the revealed card lands visually on the active seat. */
+.draw-seat{transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.draw-seat-recent{border-color:rgba(216,184,121,.88)!important;box-shadow:0 0 0 2px rgba(216,184,121,.12),0 8px 28px rgba(0,0,0,.16);transform:translateY(-2px)}
+.draw-seat-recent .draw-seat-cards .draw-mini-back:last-child{animation:deal-card-in .28s cubic-bezier(.2,.8,.2,1) both}
+.draw-revealed-card{animation:reveal-card-in .24s ease-out both}
+@keyframes deal-card-in{from{opacity:.35;transform:translateY(-10px) rotate(-8deg) scale(.88)}to{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
+@keyframes reveal-card-in{from{opacity:.25;transform:translateY(-8px) rotate(5deg) scale(.94)}to{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.draw-seat,.draw-seat-recent .draw-seat-cards .draw-mini-back:last-child,.draw-revealed-card{animation:none!important;transition:none!important}}
 .draw-seat-cards{display:flex;justify-content:center;align-items:center;min-height:25px;padding-top:2px;max-width:100%;overflow:hidden}
 .draw-mini-back{display:flex;align-items:center;justify-content:center;width:17px;height:24px;margin-left:-8px;border:1px solid #e0c57b;border-radius:3px;background:repeating-linear-gradient(135deg,#244b3a,#244b3a 3px,#b69a58 4px,#244b3a 5px);color:#f5e6b4;font-size:9px;box-shadow:0 2px 3px #081a12}
 .draw-mini-back:first-child{margin-left:0}
