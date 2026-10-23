@@ -12,3 +12,36 @@
 .trump-option[aria-pressed="true"]{border:2px solid #9b783b;background:#f7e8c7;box-shadow:0 0 0 3px #d8b87933}
 .trump-picker .primary-button:disabled{opacity:.45;cursor:not-allowed}.trump-picker .secondary-button{margin-right:8px}
 @media(max-width:420px){.trump-options{gap:6px}.trump-option{min-height:76px}.trump-option strong{font-size:27px}.trump-option span{font-size:10px}.trump-picker{padding:22px 16px}}
+
+
+/* Hokm table clarity: each played card is placed at the seat that played it. */
+.draw-table{margin:18px 0 22px;background:#e8e9df;border:1px solid #d3d7cb;border-radius:14px;padding:16px}
+.draw-card{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:9px;background:#f8f7f0;color:#20382b}
+.draw-card span{font-size:12px}.draw-card strong{font-size:20px;color:#9b783b}
+.draw-seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.draw-seat{display:grid;gap:3px;padding:10px;border:1px solid #d0d7cb;border-radius:9px;color:#34483a;text-align:right}
+.draw-seat b{font-size:11px}.draw-seat small{font-size:9px;color:#6c7b6d}
+.draw-seat.current{border-color:#a48143;background:#f8e9c8;box-shadow:0 0 0 2px #d8b87935}
+.first-five-cards{margin:18px 0 22px;gap:8px}
+.active-seat{background:#d8b87922;outline:1px solid #d8b879aa;outline-offset:5px;border-radius:8px}
+.table-area .center-table{position:static;grid-column:2;grid-row:2;min-width:0}
+.table-area .trick-cards{position:static;display:block;min-height:0}
+.table-area .trick-card{position:absolute;display:grid;justify-items:center;gap:3px;z-index:3;width:58px;padding:4px 2px;border-radius:9px;background:#163729dd;border:1px solid #d8b87966;box-shadow:0 5px 14px #06140d66}
+.table-area .trick-card .playing-card{width:43px;height:63px}
+.table-area .trick-card small{font-size:9px;color:#f3f0e8;white-space:nowrap}
+.table-area .trick-card em{font-style:normal;font-size:8px;color:#d8b879;white-space:nowrap}
+.table-area .played-seat-0{left:50%;bottom:10px;transform:translateX(-50%)}
+.table-area .played-seat-2{left:50%;top:8px;transform:translateX(-50%)}
+.table-area .played-seat-1{left:8px;top:50%;transform:translateY(-25%)}
+.table-area .played-seat-3{right:8px;top:50%;transform:translateY(-25%)}
+.table-area .empty-slot{position:relative;margin:10px auto 0}
+@media(max-width:760px){
+  .table-area .trick-card{width:49px;padding:3px 1px}
+  .table-area .trick-card .playing-card{width:37px;height:55px;padding:4px}
+  .table-area .trick-card small{font-size:8px}
+  .table-area .trick-card em{font-size:7px}
+  .table-area .played-seat-1{left:3px}
+  .table-area .played-seat-3{right:3px}
+  .table-area .played-seat-0{bottom:5px}
+  .table-area .played-seat-2{top:5px}
+}
