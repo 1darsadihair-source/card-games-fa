@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 const games = [
   { id: 'hokm', name: 'حُکم', subtitle: 'رقابت تیمی و پیش‌بینی حرکت حریف', icon: '♠', label: 'محبوب' },
-  { id: 'shele m', name: 'شِلَم', subtitle: 'امتیازگیری، همکاری و تصمیم‌گیری', icon: '♦', label: 'استراتژیک' },
+  { id: 'shelem', name: 'شِلَم', subtitle: 'امتیازگیری، همکاری و تصمیم‌گیری', icon: '♦', label: 'استراتژیک' },
   { id: 'pasoor', name: 'پاسور', subtitle: 'یک بازی کلاسیک برای دورهمی', icon: '♥', label: 'کلاسیک' }
 ];
 
@@ -295,7 +295,7 @@ export default function App() {
             <div className="game-grid">{games.map((game, i) => <article className={`game-card game-card-${i + 1}`} key={game.id}>
               <div className="game-card-top"><span className="game-icon">{game.icon}</span><span className="game-label">{game.label}</span></div>
               <div className="game-illustration"><div className="mini-card mini-card-back">۴</div><div className="mini-card mini-card-front"><span>{game.icon}</span><small>{i === 0 ? 'A' : i === 1 ? 'K' : 'Q'}</small></div><span className="illustration-star">✦</span></div>
-              <div className="game-card-copy"><h3>{game.name}</h3><p>{game.subtitle}</p><button onClick={() => setSelectedGame(game)} className="game-play">ورود به میز <span>←</span></button></div>
+              <div className="game-card-copy"><h3>{game.name}</h3><p>{game.subtitle}</p>{i === 0 ? <button onClick={() => setSelectedGame(game)} className="game-play">ورود به میز <span>←</span></button> : <button type="button" className="game-play game-play-disabled" disabled aria-disabled="true">به‌زودی <span>◷</span></button>}</div>
             </article>)}</div>
             <p className="section-footnote">بازی‌ها در حال توسعه‌اند؛ نسخه‌ی فعلی برای آزمایش اولیه‌ی رابط کاربری است.</p>
           </section>
