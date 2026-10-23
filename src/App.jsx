@@ -89,12 +89,12 @@ function Match({ game, onBack }) {
     const card = drawDeck[drawIndex];
     if (!card) return;
     const seat = drawIndex % 4;
+    setDrawIndex(i => i + 1);
     if (card.value === 14) {
       setHakem(seat); setStage('firstFive');
       setMessage('آس به ' + names[seat] + ' رسید؛ او حاکم شد.');
       return;
     }
-    setDrawIndex(i => i + 1);
     setMessage('کارت بعدی برای ' + names[(drawIndex + 1) % 4] + ' رو می‌شود.');
   };
   const startFirstFive = () => {
@@ -215,11 +215,16 @@ function Match({ game, onBack }) {
   return <main className="match-page">
     <header className="match-header"><button className="text-button" onClick={onBack}>← بازگشت</button><div className="brand compact"><span className="brand-mark">۴</span><span>چهاربرگ</span></div><span className="round-pill">{stage==='draw'?'انتخاب حاکم':stage==='chooseTrump'?'انتخاب حکم':stage==='firstFive'?'پنج کارت حاکم':'دست ' + round + ' از ۱۳'}</span></header>
     <section className="match-title"><span className="eyebrow">حکم چهارنفره · نسخهٔ آزمایشی</span><h1>حُکم</h1><p>شما و هم‌تیمی در برابر دو حریف بازی می‌کنید.</p></section>
-    {stage==='draw' ? <section className="rules-modal trump-picker">
-      <span className="eyebrow">مرحلهٔ اول</span><h2>تعیین حاکم با تک‌کِشی</h2>
-      <p>کارت‌ها یکی‌یکی رو می‌شوند. اولین آس که ظاهر شود، صاحب آن کارت حاکم است.</p>
-      <div className="draw-table" aria-live="polite"><div className="draw-card"><span>کارت‌کشی</span><strong>{drawIndex>0?drawIndex + ' کارت':'🂠'}</strong></div><div className="draw-seats">{names.map((name,i)=><div key={name} className={'draw-seat ' + (drawIndex%4===i?'current':'')}><b>{name}</b><small>{i===0||i===2?'تیم شما':'تیم حریف'}</small></div>)}</div></div>
-      <button className="primary-button" onClick={drawCard}>رو کردن کارت بعدی ←</button><button className="secondary-button" onClick={begin}>شروع دوبارهٔ کارت‌کشی</button>
+    {stage==='draw' ? <section className="draw-stage" aria-live="polite">
+      <div className="draw-stage-heading"><span className="eyebrow">مرحلهٔ اول · تعیین حاکم</span><h2>تک‌کِشی روی میز</h2><p>کارت‌ها به‌ترتیب بین چهار بازیکن پخش می‌شوند؛ اولین آس، حاکم را مشخص می‌کند.</p></div>
+      <div className="draw-game-table">
+        <div className="draw-seat draw-seat-top"><b>هم‌تیمی</b><small>تیم شما</small><div className="draw-seat-cards">{Array.from({length:Math.floor(drawIndex/4)+(drawIndex%4>2?1:0)},(_,i)=><span className="draw-mini-back" key={i}>۴</span>)}</div></div>
+        <div className="draw-seat draw-seat-left"><b>حریف ۱</b><small>تیم حریف</small><div className="draw-seat-cards">{Array.from({length:Math.floor(drawIndex/4)+(drawIndex%4>0?1:0)},(_,i)=><span className="draw-mini-back" key={i}>۴</span>)}</div></div>
+        <div className="draw-seat draw-seat-right"><b>حریف ۳</b><small>تیم حریف</small><div className="draw-seat-cards">{Array.from({length:Math.floor(drawIndex/4)+(drawIndex%4>2?1:0)},(_,i)=><span className="draw-mini-back" key={i}>۴</span>)}</div></div>
+        <div className="draw-seat draw-seat-bottom"><b>شما</b><small>تیم شما</small><div className="draw-seat-cards">{Array.from({length:Math.floor(drawIndex/4)+(drawIndex%4>0?1:0)},(_,i)=><span className="draw-mini-back" key={i}>۴</span>)}</div></div>
+        <div className="draw-center-pile"><div className="draw-pile-back">۴</div><span className="draw-arrow">↓</span><div className="draw-revealed-card">{drawIndex>0&&drawDeck[drawIndex-1] ? <Card card={drawDeck[drawIndex-1]} disabled/> : <span className="draw-card-placeholder">؟</span>}</div><small>{drawIndex===0?'آمادهٔ کارت‌کشی':'کارت '+drawIndex+' · '+names[(drawIndex-1)%4]}</small></div>
+      </div>
+      <div className="draw-stage-actions"><button className="primary-button" onClick={drawCard}>پخش کارت بعدی ←</button><button className="secondary-button" onClick={begin}>شروع دوباره</button></div>
     </section> : stage==='firstFive' ? <section className="rules-modal trump-picker">
       <span className="eyebrow">حاکم مشخص شد</span><h2>حاکم: {hakemLabel}</h2><p>دستهٔ ورق دوباره بُر می‌خورد و پنج کارت اول فقط به حاکم داده می‌شود.</p>
       <button className="primary-button" onClick={startFirstFive}>دادن پنج کارت به حاکم ←</button>
