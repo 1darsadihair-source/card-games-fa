@@ -97,6 +97,24 @@ function Match({ game, onBack }) {
     }
     setMessage('کارت بعدی برای ' + names[(drawIndex + 1) % 4] + ' رو می‌شود.');
   };
+  // Automatically reveal cards one at a time until the first Ace determines the Hakem.
+  useEffect(() => {
+    if (stage !== 'draw') return;
+    const timer = setTimeout(() => {
+      const card = drawDeck[drawIndex];
+      if (!card) return;
+      const seat = drawIndex % 4;
+      setDrawIndex(i => i + 1);
+      if (card.value === 14) {
+        setHakem(seat);
+        setStage('firstFive');
+        setMessage('آس به ' + names[seat] + ' رسید؛ او حاکم شد.');
+      } else {
+        setMessage('کارت برای ' + names[seat] + ' رو شد؛ کارت بعدی در حال پخش است.');
+      }
+    }, 850);
+    return () => clearTimeout(timer);
+  }, [stage, drawIndex, drawDeck]);
   const startFirstFive = () => {
     const deck = shuffle(makeDeck());
     const newHands = [[],[],[],[]];
@@ -224,7 +242,7 @@ function Match({ game, onBack }) {
         <div className={`draw-seat draw-seat-bottom ${drawIndex>0 && (drawIndex-1)%4===0 ? "draw-seat-recent" : ""}`}><b>شما</b><small>تیم شما</small><div className="draw-seat-cards">{Array.from({length:Math.floor(drawIndex/4)+(drawIndex%4>0?1:0)},(_,i)=><span className="draw-mini-back" key={i}>۴</span>)}</div></div>
         <div className="draw-center-pile"><div className="draw-pile-back">۴</div><span className="draw-arrow">↓</span><div key={drawIndex} className="draw-revealed-card">{drawIndex>0&&drawDeck[drawIndex-1] ? <Card card={drawDeck[drawIndex-1]} disabled/> : <span className="draw-card-placeholder">؟</span>}</div><small>{drawIndex===0?'آمادهٔ کارت‌کشی':'کارت '+drawIndex+' · '+names[(drawIndex-1)%4]}</small></div>
       </div>
-      <div className="draw-stage-actions"><button className="primary-button" onClick={drawCard}>پخش کارت بعدی ←</button><button className="secondary-button" onClick={begin}>شروع دوباره</button></div>
+      <div className="draw-stage-actions"><span className="draw-auto-status">{drawIndex===0?"پخش خودکار در حال شروع است…": "پخش خودکار کارت‌ها · "+drawIndex+" کارت رو شده"}</span><button className="secondary-button" onClick={begin}>شروع دوباره</button></div>
     </section> : stage==='firstFive' ? <section className="rules-modal trump-picker">
       <span className="eyebrow">حاکم مشخص شد</span><h2>حاکم: {hakemLabel}</h2><p>دستهٔ ورق دوباره بُر می‌خورد و پنج کارت اول فقط به حاکم داده می‌شود.</p>
       <button className="primary-button" onClick={startFirstFive}>دادن پنج کارت به حاکم ←</button>
