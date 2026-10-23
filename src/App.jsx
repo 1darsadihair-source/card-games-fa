@@ -39,86 +39,57 @@ function Card({ card, onClick, disabled = false, back = false }) {
 }
 
 function Match({ game, onBack }) {
-  const [seed, setSeed] = useState(1);
-  const [hand, setHand] = useState(() => shuffle(makeDeck()).slice(0, 8));
-  const [trick, setTrick] = useState([]);
-  const [score, setScore] = useState({ you: 0, rivals: 0 });
-  const [notice, setNotice] = useState('یک کارت انتخاب کن. این نسخه نمایشی است و قوانین کامل رقابتی هنوز پیاده‌سازی نشده‌اند.');
-
-  function startNewHand() {
-    setHand(shuffle(makeDeck()).slice(0, 8));
-    setTrick([]);
-    setScore({ you: 0, rivals: 0 });
-    setSeed(n => n + 1);
-    setNotice('دست تازه پخش شد؛ بازی را شروع کن.');
+  const [hands,setHands]=useState([]);
+  const [trump,setTrump]=useState(null);
+  const [turn,setTurn]=useState(0);
+  const [trick,setTrick]=useState([]);
+  const [tricks,setTricks]=useState([0,0]);
+  const [message,setMessage]=useState('برای شروع، خال حکم را انتخاب کن.');
+  const [started,setStarted]=useState(false);
+  const [gameOver,setGameOver]=useState(false);
+  const [round,setRound]=useState(1);
+  const suits=[{symbol:'♠',color:'black',name:'پیک'},{symbol:'♥',color:'red',name:'دل'},{symbol:'♦',color:'red',name:'خشت'},{symbol:'♣',color:'black',name:'گشنیز'}];
+  const ranks=[['۲',2],['۳',3],['۴',4],['۵',5],['۶',6],['۷',7],['۸',8],['۹',9],['۱۰',10],['سرباز',11],['بی‌بی',12],['شاه',13],['آس',14]];
+  const makeDeck=()=>suits.flatMap(s=>ranks.map(([rank,value])=>({id:s.symbol+'-'+rank,suit:s.symbol,color:s.color,rank,value,suitName:s.name})));
+  const shuffle=cards=>{const out=[...cards];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;};
+  function deal(){const d=shuffle(makeDeck());setHands([d.slice(0,13),d.slice(13,26),d.slice(26,39),d.slice(39,52)]);setTrump(null);setTurn(0);setTrick([]);setTricks([0,0]);setStarted(false);setGameOver(false);setRound(1);setMessage('کارت‌ها پخش شدند؛ خال حکم را انتخاب کن.');}
+  useEffect(()=>{deal();},[]);
+  const legalCards=player=>{const h=hands[player]||[];if(!trick.length)return h;const suit=trick[0].card.suit;const follow=h.filter(c=>c.suit===suit);return follow.length?follow:h;};
+  const strength=item=>item.card.suit===trump?100+item.card.value:item.card.suit===trick[0]?.card.suit?item.card.value:0;
+  function playCard(player,card){
+    if(!started||gameOver||player!==turn||trick.length>=4)return;
+    if(!legalCards(player).some(c=>c.id===card.id)){setMessage('اگر از خال شروع‌شده کارت داری، باید همان خال را بازی کنی.');return;}
+    setHands(prev=>prev.map((h,i)=>i===player?h.filter(c=>c.id!==card.id):h));
+    setTrick(prev=>[...prev,{card,player}]);setTurn((player+1)%4);
   }
-
-  function play(card) {
-    if (trick.length) {
-      setNotice('برای شروع دور بعد، دکمه «دور بعد» را بزن.');
-      return;
-    }
-    const rivals = shuffle(makeDeck().filter(c => !hand.some(h => h.id === c.id))).slice(0, 3);
-    const nextTrick = [{ ...card, player: 'شما' }, ...rivals.map((c, i) => ({ ...c, player: ['حریف ۱', 'حریف ۲', 'حریف ۳'][i] }))];
-    setHand(prev => prev.filter(c => c.id !== card.id));
-    setTrick(nextTrick);
-    const winning = nextTrick.reduce((best, c) => c.value > best.value ? c : best, nextTrick[0]);
-    if (winning.player === 'شما') {
-      setScore(prev => ({ ...prev, you: prev.you + 1 }));
-      setNotice('این دور را بردی! برای ادامه، «دور بعد» را انتخاب کن.');
-    } else {
-      setScore(prev => ({ ...prev, rivals: prev.rivals + 1 }));
-      setNotice(`${winning.player} این دور را برد. دور بعدی را شروع کن.`);
-    }
-  }
-
-  function nextTrick() {
-    if (!hand.length) {
-      startNewHand();
-      return;
-    }
-    setTrick([]);
-    setNotice('دور جدید؛ کارت بعدی را انتخاب کن.');
-  }
-
-  return (
-    <main className="match-page">
-      <header className="match-header">
-        <button className="text-button" onClick={onBack}>← بازگشت</button>
-        <div className="brand compact"><span className="brand-mark">۴</span><span>چهاربرگ</span></div>
-        <span className="round-pill">دست {seed}</span>
-      </header>
-      <section className="match-title">
-        <span className="eyebrow">میز بازی آزمایشی</span>
-        <h1>{game.name}</h1>
-        <p>فعلاً نسخه‌ی اولیه برای آزمایش ظاهر و تعامل کارت‌هاست.</p>
-      </section>
-      <section className="table-area">
-        <div className="opponent opponent-top"><div className="avatar">ح۱</div><div><b>حریف اول</b><small>کارت‌های پنهان</small></div><div className="hidden-cards"><Card back /><Card back /><Card back /></div></div>
-        <div className="opponent opponent-left"><div className="avatar">ح۲</div><b>حریف دوم</b><div className="hidden-cards"><Card back /><Card back /></div></div>
-        <div className="center-table">
-          <div className="table-emblem">۴</div>
-          <p>میز چهاربرگ</p>
-          <div className="trick-cards">
-            {trick.length ? trick.map((c, i) => <div className="trick-card" key={c.id + i}><Card card={c} disabled /><small>{c.player}</small></div>) : <div className="empty-slot"><span>♠</span><small>کارتت را بازی کن</small></div>}
-          </div>
-        </div>
-        <div className="opponent opponent-right"><div className="avatar">ح۳</div><b>حریف سوم</b><div className="hidden-cards"><Card back /><Card back /></div></div>
-      </section>
-      <section className="score-panel">
-        <div><small>امتیاز شما</small><strong>{score.you}</strong></div>
-        <div className="score-divider"></div>
-        <div><small>امتیاز حریف‌ها</small><strong>{score.rivals}</strong></div>
-      </section>
-      <p className="notice" role="status">{notice}</p>
-      <section className="hand-section">
-        <div className="hand-heading"><div><span className="eyebrow">نوبت شما</span><h2>کارت‌های دستت</h2></div><span className="card-count">{hand.length} کارت</span></div>
-        <div className="hand-cards">{hand.map(card => <Card key={card.id} card={card} onClick={() => play(card)} disabled={!!trick.length} />)}</div>
-        <div className="match-actions"><button className="primary-button" onClick={nextTrick}>{hand.length ? 'دور بعد' : 'پخش دست تازه'} <span>←</span></button><button className="secondary-button" onClick={startNewHand}>شروع دوباره</button></div>
-      </section>
-      <p className="prototype-note">نسخه‌ی آزمایشی: قواعد کامل حکم، شلم و پاسور، بازی آنلاین و حساب کاربری در مراحل بعد اضافه می‌شوند.</p>
-    </main>
-  );
+  useEffect(()=>{
+    if(!started||gameOver||turn===0||trick.length>=4||!hands.length)return;
+    const timer=setTimeout(()=>{const choices=legalCards(turn);if(choices.length)playCard(turn,choices[Math.floor(Math.random()*choices.length)]);},500);
+    return ()=>clearTimeout(timer);
+  },[started,gameOver,turn,trick,hands,trump]);
+  useEffect(()=>{
+    if(trick.length!==4||!started||gameOver)return;
+    const timer=setTimeout(()=>{
+      const winning=trick.reduce((best,item)=>strength(item)>strength(best)?item:best,trick[0]);
+      const team=winning.player%2===0?0:1;const scores=[...tricks];scores[team]++;setTricks(scores);
+      setTrick([]);setTurn(winning.player);
+      if(scores[team]>=7){setGameOver(true);setMessage(team===0?'تیم شما ۷ دور برد و دست را برد!':'تیم حریف ۷ دور برد.');}
+      else if(round>=13){setGameOver(true);setMessage(scores[0]>scores[1]?'دست تمام شد؛ تیم شما برنده است!':scores[0]<scores[1]?'دست تمام شد؛ تیم حریف برنده است.':'دست مساوی شد.');}
+      else {setRound(v=>v+1);setMessage('این دور را '+['شما','حریف ۱','هم‌تیمی','حریف ۳'][winning.player]+' برد.');}
+    },850);
+    return ()=>clearTimeout(timer);
+  },[trick,started,gameOver,trump,tricks,round]);
+  const names=['شما','حریف ۱','هم‌تیمی','حریف ۳'];const userHand=hands[0]||[];
+  return <main className="match-page">
+    <header className="match-header"><button className="text-button" onClick={onBack}>← بازگشت</button><div className="brand compact"><span className="brand-mark">۴</span><span>چهاربرگ</span></div><span className="round-pill">دور {round} از ۱۳</span></header>
+    <section className="match-title"><span className="eyebrow">{game.id==='hokm'?'بازی چهارنفره با قواعد پایهٔ حکم':'میز آزمایشی'}</span><h1>{game.name}</h1><p>{game.id==='hokm'?'شما و هم‌تیمی در برابر دو حریف بازی می‌کنید.':'قواعد اختصاصی این بازی هنوز آماده نیست.'}</p></section>
+    {game.id!=='hokm'?<section className="rules-modal"><h2>به‌زودی</h2><p>در حال حاضر، نسخهٔ قابل‌بازی حکم پیاده‌سازی شده و این بازی در صف توسعه است.</p><button className="primary-button" onClick={onBack}>بازگشت به بازی‌ها ←</button></section>:!started?<section className="rules-modal trump-picker"><span className="eyebrow">مرحلهٔ شروع</span><h2>خال حکم را انتخاب کن</h2><p>۵۲ کارت پخش می‌شود؛ هر بازیکن ۱۳ کارت می‌گیرد. شما و بازیکن روبه‌رو یک تیم هستید.</p><div className="trump-options">{suits.map(s=><button key={s.symbol} className={s.color==='red'?'trump-option red':'trump-option'} onClick={()=>setTrump(s.symbol)} aria-pressed={trump===s.symbol}><strong>{s.symbol}</strong><span>{s.name}</span></button>)}</div><button className="primary-button" disabled={!trump} onClick={()=>{setStarted(true);setMessage('شروع بازی؛ شما اولین کارت را بازی می‌کنی.');}}>شروع بازی ←</button><button className="secondary-button" onClick={deal}>پخش دوبارهٔ کارت‌ها</button></section>:<>
+      <section className="table-area"><div className="opponent opponent-top"><div className="avatar">هـ</div><div><b>هم‌تیمی</b><small>تیم شما</small></div><div className="hidden-cards"><Card back/><Card back/><Card back/></div></div><div className="opponent opponent-left"><div className="avatar">ح۱</div><b>حریف ۱</b><div className="hidden-cards"><Card back/><Card back/></div></div><div className="center-table"><div className="table-emblem">{trump}</div><p>خال حکم: {suits.find(s=>s.symbol===trump)?.name}</p><div className="trick-cards">{trick.map((item,i)=><div className="trick-card" key={item.card.id+i}><Card card={item.card} disabled/><small>{names[item.player]}</small></div>)}{!trick.length&&<div className="empty-slot"><span>♠</span><small>{turn===0?'کارت انتخاب کن':'نوبت حریف'}</small></div>}</div></div><div className="opponent opponent-right"><div className="avatar">ح۳</div><b>حریف ۳</b><div className="hidden-cards"><Card back/><Card back/></div></div></section>
+      <section className="score-panel"><div><small>تیم شما</small><strong>{tricks[0]}</strong></div><div className="score-divider"></div><div><small>تیم حریف</small><strong>{tricks[1]}</strong></div></section><p className="notice" role="status">{message}</p>
+      <section className="hand-section"><div className="hand-heading"><div><span className="eyebrow">{turn===0?'نوبت شما':'نوبت '+names[turn]}</span><h2>کارت‌های دستت</h2></div><span className="card-count">{userHand.length} کارت</span></div><div className="hand-cards">{userHand.map(card=><Card key={card.id} card={card} onClick={()=>playCard(0,card)} disabled={turn!==0||trick.length>=4||gameOver||!legalCards(0).some(c=>c.id===card.id)}/>)}</div><div className="match-actions">{gameOver?<button className="primary-button" onClick={deal}>بازی دوباره ←</button>:<button className="secondary-button" onClick={deal}>شروع دست تازه</button>}<button className="secondary-button" onClick={onBack}>انتخاب بازی</button></div></section>
+      <p className="prototype-note">پیروی از خال، برتری خال حکم، نوبت چهارنفره و امتیاز تیمی پیاده‌سازی شده‌اند. انتخاب حاکم بر اساس پنج کارت و بازی آنلاین هنوز اضافه نشده است.</p>
+    </>}
+  </main>;
 }
 
 export default function App() {
