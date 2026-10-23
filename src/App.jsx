@@ -226,23 +226,36 @@ function Match({ game, onBack }) {
     const nextTrick = [...trick, {card,player}];
     setHands(nextHands); setTrick(nextTrick); setTurn((player+1)%4);
     setMessage(names[player] + ' کارت ' + card.rank + ' ' + card.suit + ' را بازی کرد.');
-    if (nextTrick.length === 4) {
-      const winner = winnerOf(nextTrick);
-      const team = winner.player % 2 === 0 ? 0 : 1;
-      const nextScores = [...tricks]; nextScores[team]++;
-      setTimeout(() => {
-        setTricks(nextScores); setTrick([]); setTurn(winner.player);
-        if (nextScores[team] >= 7) {
-          setGameOver(true); setStage('over'); setMessage('تیم ' + (team===0?'شما':'حریف') + ' به ۷ دست رسید و این هَند را برد.');
-        } else if (round >= 13) {
-          setGameOver(true); setStage('over');
-          setMessage(nextScores[0]===nextScores[1]?'دست مساوی شد.':nextScores[0]>nextScores[1]?'تیم شما برنده شد.':'تیم حریف برنده شد.');
-        } else {
-          setRound(n=>n+1); setMessage(names[winner.player] + ' این دست را برد؛ همان بازیکن دست بعدی را شروع می‌کند.');
-        }
-      }, 1000);
-    }
+
   };
+  // Resolve a completed trick from persisted state too, so refreshing during the
+  // reveal animation cannot strand the match with four cards on the table.
+  useEffect(() => {
+    if (stage !== 'play' || gameOver || trick.length !== 4) return;
+    const timer = setTimeout(() => {
+      const winner = winnerOf(trick);
+      const team = winner.player % 2 === 0 ? 0 : 1;
+      const nextScores = [...tricks];
+      nextScores[team] += 1;
+      setTricks(nextScores);
+      setTrick([]);
+      setTurn(winner.player);
+      if (nextScores[team] >= 7) {
+        setGameOver(true);
+        setStage('over');
+        setMessage('تیم ' + (team === 0 ? 'شما' : 'حریف') + ' به ۷ دست رسید و این هَند را برد.');
+      } else if (round >= 13) {
+        setGameOver(true);
+        setStage('over');
+        setMessage(nextScores[0] === nextScores[1] ? 'دست مساوی شد.' : nextScores[0] > nextScores[1] ? 'تیم شما برنده شد.' : 'تیم حریف برنده شد.');
+      } else {
+        setRound(n => n + 1);
+        setMessage(names[winner.player] + ' این دست را برد؛ همان بازیکن دست بعدی را شروع می‌کند.');
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [stage, gameOver, trick, tricks, round, trump]);
+
   useEffect(() => {
     if (stage !== 'play' || gameOver || turn === 0 || trick.length >= 4 || !hands.length) return;
     const timer = setTimeout(() => {
