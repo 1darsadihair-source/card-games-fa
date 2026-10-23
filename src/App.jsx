@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const games = [
   { id: 'hokm', name: 'حُکم', subtitle: 'رقابت تیمی و پیش‌بینی حرکت حریف', icon: '♠', label: 'محبوب' },
