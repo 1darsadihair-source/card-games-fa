@@ -69,10 +69,24 @@ function Match({ game, onBack }) {
   const makeDeck = () => suits.flatMap(s => ranks.map(([rank,value]) => ({
     id: s.symbol + '-' + rank, suit: s.symbol, color: s.color, rank, value, suitName: s.name
   })));
+  // Fisher–Yates with rejection sampling: avoids modulo bias and uses browser crypto when available.
   const shuffle = cards => {
     const out = [...cards];
+    const cryptoApi = globalThis.crypto;
+    const randomIndex = max => {
+      if (!cryptoApi?.getRandomValues) return Math.floor(Math.random() * max);
+      const range = 0x100000000;
+      const limit = Math.floor(range / max) * max;
+      const sample = new Uint32Array(1);
+      let value;
+      do {
+        cryptoApi.getRandomValues(sample);
+        value = sample[0];
+      } while (value >= limit);
+      return value % max;
+    };
     for (let i = out.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = randomIndex(i + 1);
       [out[i], out[j]] = [out[j], out[i]];
     }
     return out;
@@ -152,19 +166,38 @@ function Match({ game, onBack }) {
   const chooseAiCard = player => {
     const hand = legalCards(player);
     if (hand.length <= 1) return hand[0];
+    const rankValue = card => card.value;
+    const lowest = cards => [...cards].sort((a,b) => rankValue(a)-rankValue(b))[0];
+    const nonTrump = hand.filter(card => card.suit !== trump);
+
     if (!trick.length) {
-      const counts = suits.map(s => ({ suit:s.symbol, cards:hand.filter(c=>c.suit===s.symbol) })).sort((a,b)=>b.cards.length-a.cards.length);
-      const leadCards = hand.filter(c=>c.suit===counts[0]?.suit).sort((a,b)=>b.value-a.value);
-      return leadCards.find(c=>c.value>=13) || leadCards[leadCards.length-1] || hand[0];
+      // Lead from the longest suit; prefer a high card only when it can establish control.
+      const suitGroups = suits.map(s => ({
+        suit: s.symbol,
+        cards: hand.filter(card => card.suit === s.symbol)
+      })).sort((a,b) => b.cards.length-a.cards.length ||
+        Math.max(...b.cards.map(c=>c.value),0)-Math.max(...a.cards.map(c=>c.value),0));
+      const lead = suitGroups[0]?.cards || hand;
+      const aceOrKing = lead.filter(card => card.value >= 13).sort((a,b)=>b.value-a.value);
+      return aceOrKing[0] || lowest(lead);
     }
+
     const currentWinner = winnerOf(trick);
     const partnerWinning = currentWinner.player % 2 === player % 2;
-    const winningChoices = hand.filter(card => winnerOf([...trick,{card,player}]).player === player).sort((a,b)=>a.value-b.value);
-    if (partnerWinning) {
-      return hand.filter(c=>c.suit!==trump).sort((a,b)=>a.value-b.value)[0] || hand.slice().sort((a,b)=>a.value-b.value)[0];
-    }
+    const winningChoices = hand
+      .filter(card => winnerOf([...trick,{card,player}]).player === player)
+      .sort((a,b) => {
+        const aTrump = a.suit === trump ? 1 : 0;
+        const bTrump = b.suit === trump ? 1 : 0;
+        return aTrump-bTrump || a.value-b.value;
+      });
+
+    // Don't waste a trump or an expensive card when the partner already controls the trick.
+    if (partnerWinning) return lowest(nonTrump.length ? nonTrump : hand);
+    // Win with the cheapest possible card; use a trump only when it is needed to take the trick.
     if (winningChoices.length) return winningChoices[0];
-    return hand.filter(c=>c.suit!==trump).sort((a,b)=>a.value-b.value)[0] || hand.slice().sort((a,b)=>a.value-b.value)[0];
+    // If the trick cannot be won, shed a low non-trump card first.
+    return lowest(nonTrump.length ? nonTrump : hand);
   };
   const playCardSound = (frequency = 440, duration = 0.07) => {
     try {
