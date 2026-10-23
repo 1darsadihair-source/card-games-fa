@@ -6,9 +6,31 @@
     <meta name="theme-color" content="#10251f" />
     <meta name="description" content="بازی‌های پاسور فارسی؛ حکم، شلم و پاسور" />
     <title>چهاربرگ | بازی‌های کارتی فارسی</title>
+    <style>
+      .boot-fallback{max-width:760px;margin:9vh auto;padding:28px;color:#f3f0e8;font-family:Tahoma,sans-serif;line-height:2}
+      .boot-fallback h1{font-size:clamp(34px,8vw,60px);margin:8px 0;color:#d8b879}
+      .boot-fallback p{color:#bdc8be}
+      .boot-fallback .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:24px}
+      .boot-fallback .tile{padding:18px;border:1px solid #d8b87966;border-radius:12px;background:#18352c}
+      .boot-fallback .tile b{display:block;font-size:22px;color:#d8b879}
+      .boot-fallback .note{font-size:12px;color:#a8b8ac;margin-top:24px}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="root">
+      <main class="boot-fallback">
+        <div>♠ دنیای بازی‌های کارتی فارسی</div>
+        <h1>چهاربرگ</h1>
+        <p>هر دست، یک داستان تازه.</p>
+        <p>بازی‌های کارتی فارسی؛ یک میز تازه برای بازی‌های آشنا.</p>
+        <div class="tiles">
+          <div class="tile"><b>♠ حُکم</b>نسخهٔ آزمایشی بازی</div>
+          <div class="tile"><b>♦ شِلَم</b>به‌زودی</div>
+          <div class="tile"><b>♥ پاسور</b>به‌زودی</div>
+        </div>
+        <p class="note">اگر این صفحه را می‌بینی، بخش نمایشی سایت بارگذاری شده اما برنامهٔ تعاملی اجرا نشده است. صفحه را یک‌بار تازه‌سازی کن.</p>
+      </main>
+    </div>
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
