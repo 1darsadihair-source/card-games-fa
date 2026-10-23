@@ -39,55 +39,174 @@ function Card({ card, onClick, disabled = false, back = false }) {
 }
 
 function Match({ game, onBack }) {
-  const [hands,setHands]=useState([]);
-  const [trump,setTrump]=useState(null);
-  const [turn,setTurn]=useState(0);
-  const [trick,setTrick]=useState([]);
-  const [tricks,setTricks]=useState([0,0]);
-  const [message,setMessage]=useState('برای شروع، خال حکم را انتخاب کن.');
-  const [started,setStarted]=useState(false);
-  const [gameOver,setGameOver]=useState(false);
-  const [round,setRound]=useState(1);
-  const suits=[{symbol:'♠',color:'black',name:'پیک'},{symbol:'♥',color:'red',name:'دل'},{symbol:'♦',color:'red',name:'خشت'},{symbol:'♣',color:'black',name:'گشنیز'}];
-  const ranks=[['۲',2],['۳',3],['۴',4],['۵',5],['۶',6],['۷',7],['۸',8],['۹',9],['۱۰',10],['سرباز',11],['بی‌بی',12],['شاه',13],['آس',14]];
-  const makeDeck=()=>suits.flatMap(s=>ranks.map(([rank,value])=>({id:s.symbol+'-'+rank,suit:s.symbol,color:s.color,rank,value,suitName:s.name})));
-  const shuffle=cards=>{const out=[...cards];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;};
-  function deal(){const d=shuffle(makeDeck());setHands([d.slice(0,13),d.slice(13,26),d.slice(26,39),d.slice(39,52)]);setTrump(null);setTurn(0);setTrick([]);setTricks([0,0]);setStarted(false);setGameOver(false);setRound(1);setMessage('کارت‌ها پخش شدند؛ خال حکم را انتخاب کن.');}
-  useEffect(()=>{deal();},[]);
-  const legalCards=player=>{const h=hands[player]||[];if(!trick.length)return h;const suit=trick[0].card.suit;const follow=h.filter(c=>c.suit===suit);return follow.length?follow:h;};
-  const strength=item=>item.card.suit===trump?100+item.card.value:item.card.suit===trick[0]?.card.suit?item.card.value:0;
-  function playCard(player,card){
-    if(!started||gameOver||player!==turn||trick.length>=4)return;
-    if(!legalCards(player).some(c=>c.id===card.id)){setMessage('اگر از خال شروع‌شده کارت داری، باید همان خال را بازی کنی.');return;}
-    setHands(prev=>prev.map((h,i)=>i===player?h.filter(c=>c.id!==card.id):h));
-    setTrick(prev=>[...prev,{card,player}]);setTurn((player+1)%4);
-  }
-  useEffect(()=>{
-    if(!started||gameOver||turn===0||trick.length>=4||!hands.length)return;
-    const timer=setTimeout(()=>{const choices=legalCards(turn);if(choices.length)playCard(turn,choices[Math.floor(Math.random()*choices.length)]);},500);
-    return ()=>clearTimeout(timer);
-  },[started,gameOver,turn,trick,hands,trump]);
-  useEffect(()=>{
-    if(trick.length!==4||!started||gameOver)return;
-    const timer=setTimeout(()=>{
-      const winning=trick.reduce((best,item)=>strength(item)>strength(best)?item:best,trick[0]);
-      const team=winning.player%2===0?0:1;const scores=[...tricks];scores[team]++;setTricks(scores);
-      setTrick([]);setTurn(winning.player);
-      if(scores[team]>=7){setGameOver(true);setMessage(team===0?'تیم شما ۷ دور برد و دست را برد!':'تیم حریف ۷ دور برد.');}
-      else if(round>=13){setGameOver(true);setMessage(scores[0]>scores[1]?'دست تمام شد؛ تیم شما برنده است!':scores[0]<scores[1]?'دست تمام شد؛ تیم حریف برنده است.':'دست مساوی شد.');}
-      else {setRound(v=>v+1);setMessage('این دور را '+['شما','حریف ۱','هم‌تیمی','حریف ۳'][winning.player]+' برد.');}
-    },850);
-    return ()=>clearTimeout(timer);
-  },[trick,started,gameOver,trump,tricks,round]);
-  const names=['شما','حریف ۱','هم‌تیمی','حریف ۳'];const userHand=hands[0]||[];
+  const [hands, setHands] = useState([]);
+  const [trump, setTrump] = useState(null);
+  const [turn, setTurn] = useState(0);
+  const [trick, setTrick] = useState([]);
+  const [tricks, setTricks] = useState([0, 0]);
+  const [message, setMessage] = useState('برای تعیین حاکم، کارت‌کشی را شروع کن.');
+  const [stage, setStage] = useState('draw');
+  const [drawDeck, setDrawDeck] = useState([]);
+  const [drawIndex, setDrawIndex] = useState(0);
+  const [hakem, setHakem] = useState(null);
+  const [round, setRound] = useState(1);
+  const [gameOver, setGameOver] = useState(false);
+  const suits = [
+    { symbol: '♠', color: 'black', name: 'پیک' },
+    { symbol: '♥', color: 'red', name: 'دل' },
+    { symbol: '♦', color: 'red', name: 'خشت' },
+    { symbol: '♣', color: 'black', name: 'گشنیز' }
+  ];
+  const ranks = [['۲',2],['۳',3],['۴',4],['۵',5],['۶',6],['۷',7],['۸',8],['۹',9],['۱۰',10],['سرباز',11],['بی‌بی',12],['شاه',13],['آس',14]];
+  const names = ['شما', 'حریف ۱', 'هم‌تیمی', 'حریف ۳'];
+  const makeDeck = () => suits.flatMap(s => ranks.map(([rank,value]) => ({
+    id: s.symbol + '-' + rank, suit: s.symbol, color: s.color, rank, value, suitName: s.name
+  })));
+  const shuffle = cards => {
+    const out = [...cards];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+  const begin = () => {
+    setHands([[],[],[],[]]); setTrump(null); setTurn(0); setTrick([]); setTricks([0,0]);
+    setGameOver(false); setRound(1); setHakem(null);
+    setDrawDeck(shuffle(makeDeck())); setDrawIndex(0); setStage('draw');
+    setMessage('کارت‌ها یکی‌یکی رو می‌شوند؛ اولین آس، حاکم را مشخص می‌کند.');
+  };
+  useEffect(() => { begin(); }, []);
+  const drawCard = () => {
+    if (stage !== 'draw' || !drawDeck.length) return;
+    const card = drawDeck[drawIndex];
+    if (!card) return;
+    const seat = drawIndex % 4;
+    if (card.value === 14) {
+      setHakem(seat); setStage('firstFive');
+      setMessage('آس به ' + names[seat] + ' رسید؛ او حاکم شد.');
+      return;
+    }
+    setDrawIndex(i => i + 1);
+    setMessage('کارت بعدی برای ' + names[(drawIndex + 1) % 4] + ' رو می‌شود.');
+  };
+  const startFirstFive = () => {
+    const deck = shuffle(makeDeck());
+    const newHands = [[],[],[],[]];
+    newHands[hakem] = deck.slice(0,5);
+    setHands(newHands); setDrawDeck(deck.slice(5)); setTrump(null);
+    setStage('chooseTrump');
+    setMessage('حاکم فقط پنج کارت اول را می‌بیند و خال حکم را انتخاب می‌کند.');
+  };
+  const finishDeal = suit => {
+    const newHands = hands.map(h => [...h]);
+    const remaining = shuffle(drawDeck);
+    let cursor = 0;
+    while (newHands.some(h => h.length < 13) && cursor < remaining.length) {
+      for (let offset = 0; offset < 4 && cursor < remaining.length; offset++) {
+        const player = (hakem + offset) % 4;
+        if (newHands[player].length < 13) newHands[player].push(remaining[cursor++]);
+      }
+    }
+    setHands(newHands.map(h => h.sort((a,b) => suits.findIndex(s=>s.symbol===a.suit)-suits.findIndex(s=>s.symbol===b.suit) || b.value-a.value)));
+    setTrump(suit); setTurn(hakem); setStage('play');
+    setMessage('حکم ' + suits.find(s=>s.symbol===suit)?.name + ' است. حاکم، ' + names[hakem] + '، اولین کارت را می‌اندازد.');
+  };
+  const legalCards = (player, currentTrick = trick, currentHands = hands) => {
+    const hand = currentHands[player] || [];
+    if (!currentTrick.length) return hand;
+    const ledSuit = currentTrick[0].card.suit;
+    const matching = hand.filter(card => card.suit === ledSuit);
+    return matching.length ? matching : hand;
+  };
+  const itemStrength = (item, ledSuit) => item.card.suit === trump ? 100 + item.card.value : item.card.suit === ledSuit ? item.card.value : 0;
+  const winnerOf = currentTrick => {
+    const ledSuit = currentTrick[0].card.suit;
+    return currentTrick.reduce((best, item) => itemStrength(item, ledSuit) > itemStrength(best, ledSuit) ? item : best, currentTrick[0]);
+  };
+  const chooseAiCard = player => {
+    const hand = legalCards(player);
+    if (hand.length <= 1) return hand[0];
+    if (!trick.length) {
+      const counts = suits.map(s => ({ suit:s.symbol, cards:hand.filter(c=>c.suit===s.symbol) })).sort((a,b)=>b.cards.length-a.cards.length);
+      const leadCards = hand.filter(c=>c.suit===counts[0]?.suit).sort((a,b)=>b.value-a.value);
+      return leadCards.find(c=>c.value>=13) || leadCards[leadCards.length-1] || hand[0];
+    }
+    const currentWinner = winnerOf(trick);
+    const partnerWinning = currentWinner.player % 2 === player % 2;
+    const winningChoices = hand.filter(card => winnerOf([...trick,{card,player}]).player === player).sort((a,b)=>a.value-b.value);
+    if (partnerWinning) {
+      return hand.filter(c=>c.suit!==trump).sort((a,b)=>a.value-b.value)[0] || hand.slice().sort((a,b)=>a.value-b.value)[0];
+    }
+    if (winningChoices.length) return winningChoices[0];
+    return hand.filter(c=>c.suit!==trump).sort((a,b)=>a.value-b.value)[0] || hand.slice().sort((a,b)=>a.value-b.value)[0];
+  };
+  const playCard = (player, card) => {
+    if (stage !== 'play' || gameOver || player !== turn || trick.length >= 4) return;
+    if (!legalCards(player).some(c => c.id === card.id)) {
+      setMessage('اگر از خال شروع‌شده کارت داری، باید همان خال را بازی کنی.'); return;
+    }
+    const nextHands = hands.map((hand,index)=>index===player?hand.filter(c=>c.id!==card.id):hand);
+    const nextTrick = [...trick, {card,player}];
+    setHands(nextHands); setTrick(nextTrick); setTurn((player+1)%4);
+    setMessage(names[player] + ' کارت ' + card.rank + ' ' + card.suit + ' را بازی کرد.');
+    if (nextTrick.length === 4) {
+      const winner = winnerOf(nextTrick);
+      const team = winner.player % 2 === 0 ? 0 : 1;
+      const nextScores = [...tricks]; nextScores[team]++;
+      setTimeout(() => {
+        setTricks(nextScores); setTrick([]); setTurn(winner.player);
+        if (nextScores[team] >= 7) {
+          setGameOver(true); setStage('over'); setMessage('تیم ' + (team===0?'شما':'حریف') + ' به ۷ دست رسید و این هَند را برد.');
+        } else if (round >= 13) {
+          setGameOver(true); setStage('over');
+          setMessage(nextScores[0]===nextScores[1]?'دست مساوی شد.':nextScores[0]>nextScores[1]?'تیم شما برنده شد.':'تیم حریف برنده شد.');
+        } else {
+          setRound(n=>n+1); setMessage(names[winner.player] + ' این دست را برد؛ همان بازیکن دست بعدی را شروع می‌کند.');
+        }
+      }, 1000);
+    }
+  };
+  useEffect(() => {
+    if (stage !== 'play' || gameOver || turn === 0 || trick.length >= 4 || !hands.length) return;
+    const timer = setTimeout(() => {
+      const card = chooseAiCard(turn);
+      if (card) playCard(turn, card);
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [stage, gameOver, turn, trick, hands, trump]);
+  const userHand = hands[0] || [];
+  const hakemLabel = hakem === null ? '' : names[hakem];
   return <main className="match-page">
-    <header className="match-header"><button className="text-button" onClick={onBack}>← بازگشت</button><div className="brand compact"><span className="brand-mark">۴</span><span>چهاربرگ</span></div><span className="round-pill">دور {round} از ۱۳</span></header>
-    <section className="match-title"><span className="eyebrow">{game.id==='hokm'?'بازی چهارنفره با قواعد پایهٔ حکم':'میز آزمایشی'}</span><h1>{game.name}</h1><p>{game.id==='hokm'?'شما و هم‌تیمی در برابر دو حریف بازی می‌کنید.':'قواعد اختصاصی این بازی هنوز آماده نیست.'}</p></section>
-    {game.id!=='hokm'?<section className="rules-modal"><h2>به‌زودی</h2><p>در حال حاضر، نسخهٔ قابل‌بازی حکم پیاده‌سازی شده و این بازی در صف توسعه است.</p><button className="primary-button" onClick={onBack}>بازگشت به بازی‌ها ←</button></section>:!started?<section className="rules-modal trump-picker"><span className="eyebrow">مرحلهٔ شروع</span><h2>خال حکم را انتخاب کن</h2><p>۵۲ کارت پخش می‌شود؛ هر بازیکن ۱۳ کارت می‌گیرد. شما و بازیکن روبه‌رو یک تیم هستید.</p><div className="trump-options">{suits.map(s=><button key={s.symbol} className={s.color==='red'?'trump-option red':'trump-option'} onClick={()=>setTrump(s.symbol)} aria-pressed={trump===s.symbol}><strong>{s.symbol}</strong><span>{s.name}</span></button>)}</div><button className="primary-button" disabled={!trump} onClick={()=>{setStarted(true);setMessage('شروع بازی؛ شما اولین کارت را بازی می‌کنی.');}}>شروع بازی ←</button><button className="secondary-button" onClick={deal}>پخش دوبارهٔ کارت‌ها</button></section>:<>
-      <section className="table-area"><div className="opponent opponent-top"><div className="avatar">هـ</div><div><b>هم‌تیمی</b><small>تیم شما</small></div><div className="hidden-cards"><Card back/><Card back/><Card back/></div></div><div className="opponent opponent-left"><div className="avatar">ح۱</div><b>حریف ۱</b><div className="hidden-cards"><Card back/><Card back/></div></div><div className="center-table"><div className="table-emblem">{trump}</div><p>خال حکم: {suits.find(s=>s.symbol===trump)?.name}</p><div className="trick-cards">{trick.map((item,i)=><div className="trick-card" key={item.card.id+i}><Card card={item.card} disabled/><small>{names[item.player]}</small></div>)}{!trick.length&&<div className="empty-slot"><span>♠</span><small>{turn===0?'کارت انتخاب کن':'نوبت حریف'}</small></div>}</div></div><div className="opponent opponent-right"><div className="avatar">ح۳</div><b>حریف ۳</b><div className="hidden-cards"><Card back/><Card back/></div></div></section>
-      <section className="score-panel"><div><small>تیم شما</small><strong>{tricks[0]}</strong></div><div className="score-divider"></div><div><small>تیم حریف</small><strong>{tricks[1]}</strong></div></section><p className="notice" role="status">{message}</p>
-      <section className="hand-section"><div className="hand-heading"><div><span className="eyebrow">{turn===0?'نوبت شما':'نوبت '+names[turn]}</span><h2>کارت‌های دستت</h2></div><span className="card-count">{userHand.length} کارت</span></div><div className="hand-cards">{userHand.map(card=><Card key={card.id} card={card} onClick={()=>playCard(0,card)} disabled={turn!==0||trick.length>=4||gameOver||!legalCards(0).some(c=>c.id===card.id)}/>)}</div><div className="match-actions">{gameOver?<button className="primary-button" onClick={deal}>بازی دوباره ←</button>:<button className="secondary-button" onClick={deal}>شروع دست تازه</button>}<button className="secondary-button" onClick={onBack}>انتخاب بازی</button></div></section>
-      <p className="prototype-note">پیروی از خال، برتری خال حکم، نوبت چهارنفره و امتیاز تیمی پیاده‌سازی شده‌اند. انتخاب حاکم بر اساس پنج کارت و بازی آنلاین هنوز اضافه نشده است.</p>
+    <header className="match-header"><button className="text-button" onClick={onBack}>← بازگشت</button><div className="brand compact"><span className="brand-mark">۴</span><span>چهاربرگ</span></div><span className="round-pill">{stage==='draw'?'انتخاب حاکم':stage==='chooseTrump'?'انتخاب حکم':stage==='firstFive'?'پنج کارت حاکم':'دست ' + round + ' از ۱۳'}</span></header>
+    <section className="match-title"><span className="eyebrow">حکم چهارنفره · نسخهٔ آزمایشی</span><h1>حُکم</h1><p>شما و هم‌تیمی در برابر دو حریف بازی می‌کنید.</p></section>
+    {stage==='draw' ? <section className="rules-modal trump-picker">
+      <span className="eyebrow">مرحلهٔ اول</span><h2>تعیین حاکم با تک‌کِشی</h2>
+      <p>کارت‌ها یکی‌یکی رو می‌شوند. اولین آس که ظاهر شود، صاحب آن کارت حاکم است.</p>
+      <div className="draw-table" aria-live="polite"><div className="draw-card"><span>کارت‌کشی</span><strong>{drawIndex>0?drawIndex + ' کارت':'🂠'}</strong></div><div className="draw-seats">{names.map((name,i)=><div key={name} className={'draw-seat ' + (drawIndex%4===i?'current':'')}><b>{name}</b><small>{i===0||i===2?'تیم شما':'تیم حریف'}</small></div>)}</div></div>
+      <button className="primary-button" onClick={drawCard}>رو کردن کارت بعدی ←</button><button className="secondary-button" onClick={begin}>شروع دوبارهٔ کارت‌کشی</button>
+    </section> : stage==='firstFive' ? <section className="rules-modal trump-picker">
+      <span className="eyebrow">حاکم مشخص شد</span><h2>حاکم: {hakemLabel}</h2><p>دستهٔ ورق دوباره بُر می‌خورد و پنج کارت اول فقط به حاکم داده می‌شود.</p>
+      <button className="primary-button" onClick={startFirstFive}>دادن پنج کارت به حاکم ←</button>
+    </section> : stage==='chooseTrump' ? <section className="rules-modal trump-picker">
+      <span className="eyebrow">مرحلهٔ دوم</span><h2>{hakem===0?'پنج کارت شما':'پنج کارت حاکم'}</h2>
+      <p>{hakem===0?'با توجه به همین پنج کارت، خال حکم را انتخاب کن.':'حاکم بر اساس پنج کارت خودش خال حکم را انتخاب می‌کند.'}</p>
+      <div className="hand-cards first-five-cards">{(hands[hakem]||[]).map(card=><Card key={card.id} card={card} disabled/>)}</div>
+      {hakem===0 ? <><div className="trump-options">{suits.map(s=><button key={s.symbol} className={s.color==='red'?'trump-option red':'trump-option'} onClick={()=>setTrump(s.symbol)} aria-pressed={trump===s.symbol}><strong>{s.symbol}</strong><span>{s.name}</span></button>)}</div><button className="primary-button" disabled={!trump} onClick={()=>finishDeal(trump)}>تأیید حکم و پخش بقیهٔ کارت‌ها ←</button></> : <button className="primary-button" onClick={()=>{const hand=hands[hakem]||[];const score=suits.map(s=>({suit:s.symbol,score:hand.filter(c=>c.suit===s.symbol).reduce((sum,c)=>sum+(c.value>=13?c.value-10:c.value>=11?1:0),0)+hand.filter(c=>c.suit===s.symbol).length*2})).sort((a,b)=>b.score-a.score);finishDeal(score[0].suit);}}>انتخاب حکم توسط حاکم ←</button>}
+    </section> : <>
+      <section className="table-area">
+        <div className={'opponent opponent-top ' + (turn===2?'active-seat':'')}><div className="avatar">هـ</div><div><b>هم‌تیمی</b><small>تیم شما{hakem===2?' · حاکم':''}</small></div><div className="hidden-cards"><Card back/><Card back/><Card back/></div></div>
+        <div className={'opponent opponent-left ' + (turn===1?'active-seat':'')}><div className="avatar">ح۱</div><b>حریف ۱{hakem===1?' · حاکم':''}</b><div className="hidden-cards"><Card back/><Card back/></div></div>
+        <div className="center-table"><div className="table-emblem">{trump}</div><p>حکم: {suits.find(s=>s.symbol===trump)?.name}</p><div className="trick-cards">
+          {trick.map(item=><div className={'trick-card played-seat-' + item.player} key={item.card.id}><Card card={item.card} disabled/><small>{names[item.player]}{item.player===hakem?' · حاکم':''}</small><em>کارت {item.card.rank}</em></div>)}
+          {!trick.length&&<div className="empty-slot"><span>♠</span><small>{names[turn]} شروع می‌کند</small></div>}
+        </div></div>
+        <div className={'opponent opponent-right ' + (turn===3?'active-seat':'')}><div className="avatar">ح۳</div><b>حریف ۳{hakem===3?' · حاکم':''}</b><div className="hidden-cards"><Card back/><Card back/></div></div>
+      </section>
+      <section className="score-panel"><div><small>تیم شما</small><strong>{tricks[0]}</strong></div><div className="score-divider"></div><div><small>تیم حریف</small><strong>{tricks[1]}</strong></div></section>
+      <p className="notice" role="status">{message}</p>
+      <section className="hand-section"><div className="hand-heading"><div><span className="eyebrow">{turn===0?'نوبت شما':'نوبت '+names[turn]}</span><h2>کارت‌های دستت</h2></div><span className="card-count">{userHand.length} کارت</span></div><div className="hand-cards">{userHand.map(card=><Card key={card.id} card={card} onClick={()=>playCard(0,card)} disabled={turn!==0||trick.length>=4||gameOver||!legalCards(0).some(c=>c.id===card.id)}/>)}</div><div className="match-actions">{gameOver?<button className="primary-button" onClick={begin}>بازی دوباره ←</button>:<button className="secondary-button" onClick={begin}>شروع دست تازه</button>}<button className="secondary-button" onClick={onBack}>انتخاب بازی</button></div></section>
+      <p className="prototype-note">تعیین حاکم با تک‌کشی، پنج کارت نخست حاکم، خال‌دادن اجباری و انتخاب منطقی‌تر کارت توسط ربات‌ها پیاده‌سازی شده است.</p>
     </>}
   </main>;
 }
