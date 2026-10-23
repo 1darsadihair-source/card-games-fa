@@ -45,3 +45,7 @@
   .table-area .played-seat-0{bottom:5px}
   .table-area .played-seat-2{top:5px}
 }
+
+/* Unavailable game cards remain visible without pretending to be playable. */
+.game-play-disabled,.game-play-disabled:disabled{opacity:.72;cursor:not-allowed;background:#d8d9cf;color:#667166;border:1px dashed #aeb7a9;box-shadow:none}
+.game-play-disabled span{color:#8d967f}
