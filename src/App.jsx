@@ -39,18 +39,25 @@ function Card({ card, onClick, disabled = false, back = false }) {
 }
 
 function Match({ game, onBack }) {
-  const [hands, setHands] = useState([]);
-  const [trump, setTrump] = useState(null);
-  const [turn, setTurn] = useState(0);
-  const [trick, setTrick] = useState([]);
-  const [tricks, setTricks] = useState([0, 0]);
-  const [message, setMessage] = useState('برای تعیین حاکم، کارت‌کشی را شروع کن.');
-  const [stage, setStage] = useState('draw');
-  const [drawDeck, setDrawDeck] = useState([]);
-  const [drawIndex, setDrawIndex] = useState(0);
-  const [hakem, setHakem] = useState(null);
-  const [round, setRound] = useState(1);
-  const [gameOver, setGameOver] = useState(false);
+  const [savedInitial] = useState(() => {
+    try {
+      const raw = localStorage.getItem('charbarg-match-v1');
+      const value = raw ? JSON.parse(raw) : null;
+      return value && value.gameId === game.id ? value : null;
+    } catch { return null; }
+  });
+  const [hands, setHands] = useState(() => savedInitial?.hands || []);
+  const [trump, setTrump] = useState(() => savedInitial?.trump ?? null);
+  const [turn, setTurn] = useState(() => savedInitial?.turn ?? 0);
+  const [trick, setTrick] = useState(() => savedInitial?.trick || []);
+  const [tricks, setTricks] = useState(() => savedInitial?.tricks || [0, 0]);
+  const [message, setMessage] = useState(() => savedInitial?.message || 'برای تعیین حاکم، کارت‌کشی را شروع کن.');
+  const [stage, setStage] = useState(() => savedInitial?.stage || 'draw');
+  const [drawDeck, setDrawDeck] = useState(() => savedInitial?.drawDeck || []);
+  const [drawIndex, setDrawIndex] = useState(() => savedInitial?.drawIndex || 0);
+  const [hakem, setHakem] = useState(() => savedInitial?.hakem ?? null);
+  const [round, setRound] = useState(() => savedInitial?.round || 1);
+  const [gameOver, setGameOver] = useState(() => savedInitial?.gameOver || false);
   const suits = [
     { symbol: '♠', color: 'black', name: 'پیک' },
     { symbol: '♥', color: 'red', name: 'دل' },
@@ -76,7 +83,7 @@ function Match({ game, onBack }) {
     setDrawDeck(shuffle(makeDeck())); setDrawIndex(0); setStage('draw');
     setMessage('کارت‌ها یکی‌یکی رو می‌شوند؛ اولین آس، حاکم را مشخص می‌کند.');
   };
-  useEffect(() => { begin(); }, []);
+  useEffect(() => { if (!savedInitial) begin(); }, []);
   const drawCard = () => {
     if (stage !== 'draw' || !drawDeck.length) return;
     const card = drawDeck[drawIndex];
@@ -141,11 +148,29 @@ function Match({ game, onBack }) {
     if (winningChoices.length) return winningChoices[0];
     return hand.filter(c=>c.suit!==trump).sort((a,b)=>a.value-b.value)[0] || hand.slice().sort((a,b)=>a.value-b.value)[0];
   };
+  const playCardSound = (frequency = 440, duration = 0.07) => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.045, ctx.currentTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      oscillator.connect(gain); gain.connect(ctx.destination);
+      oscillator.start(); oscillator.stop(ctx.currentTime + duration);
+      oscillator.onended = () => ctx.close();
+    } catch {}
+  };
   const playCard = (player, card) => {
     if (stage !== 'play' || gameOver || player !== turn || trick.length >= 4) return;
     if (!legalCards(player).some(c => c.id === card.id)) {
       setMessage('اگر از خال شروع‌شده کارت داری، باید همان خال را بازی کنی.'); return;
     }
+    playCardSound(card.color === 'red' ? 520 : 390);
     const nextHands = hands.map((hand,index)=>index===player?hand.filter(c=>c.id!==card.id):hand);
     const nextTrick = [...trick, {card,player}];
     setHands(nextHands); setTrick(nextTrick); setTurn((player+1)%4);
@@ -175,6 +200,16 @@ function Match({ game, onBack }) {
     }, 650);
     return () => clearTimeout(timer);
   }, [stage, gameOver, turn, trick, hands, trump]);
+  useEffect(() => {
+    try {
+      localStorage.setItem('charbarg-match-v1', JSON.stringify({
+        gameId: game.id, hands, trump, turn, trick, tricks, message, stage,
+        drawDeck, drawIndex, hakem, round, gameOver
+      }));
+    } catch (error) {
+      console.warn('FourBarg could not save match state:', error);
+    }
+  }, [game.id, hands, trump, turn, trick, tricks, message, stage, drawDeck, drawIndex, hakem, round, gameOver]);
   const userHand = hands[0] || [];
   const hakemLabel = hakem === null ? '' : names[hakem];
   return <main className="match-page">
