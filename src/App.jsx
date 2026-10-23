@@ -191,7 +191,7 @@ function Match({ game, onBack }) {
     </section> : stage==='chooseTrump' ? <section className="rules-modal trump-picker">
       <span className="eyebrow">مرحلهٔ دوم</span><h2>{hakem===0?'پنج کارت شما':'پنج کارت حاکم'}</h2>
       <p>{hakem===0?'با توجه به همین پنج کارت، خال حکم را انتخاب کن.':'حاکم بر اساس پنج کارت خودش خال حکم را انتخاب می‌کند.'}</p>
-      <div className="hand-cards first-five-cards">{(hands[hakem]||[]).map(card=><Card key={card.id} card={card} disabled/>)}</div>
+      <div className="hand-cards first-five-cards">{hakem===0?(hands[hakem]||[]).map(card=><Card key={card.id} card={card} disabled/>):Array.from({length:5},(_,i)=><Card key={i} back/>)}</div>
       {hakem===0 ? <><div className="trump-options">{suits.map(s=><button key={s.symbol} className={s.color==='red'?'trump-option red':'trump-option'} onClick={()=>setTrump(s.symbol)} aria-pressed={trump===s.symbol}><strong>{s.symbol}</strong><span>{s.name}</span></button>)}</div><button className="primary-button" disabled={!trump} onClick={()=>finishDeal(trump)}>تأیید حکم و پخش بقیهٔ کارت‌ها ←</button></> : <button className="primary-button" onClick={()=>{const hand=hands[hakem]||[];const score=suits.map(s=>({suit:s.symbol,score:hand.filter(c=>c.suit===s.symbol).reduce((sum,c)=>sum+(c.value>=13?c.value-10:c.value>=11?1:0),0)+hand.filter(c=>c.suit===s.symbol).length*2})).sort((a,b)=>b.score-a.score);finishDeal(score[0].suit);}}>انتخاب حکم توسط حاکم ←</button>}
     </section> : <>
       <section className="table-area">
