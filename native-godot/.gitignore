@@ -1,0 +1,8 @@
+.godot/
+.export/
+*.apk
+*.aab
+*.ipa
+*.keystore
+*.mobileprovision
+export_presets.cfg
