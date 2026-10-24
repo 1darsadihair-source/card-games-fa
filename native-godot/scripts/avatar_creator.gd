@@ -91,7 +91,7 @@ func _build_ui() -> void:
 	var back_button := Button.new()
 	back_button.text = "بازگشت به میز"
 	back_button.custom_minimum_size = Vector2(0, 50)
-	back_button.pressed.connect(func(): back_requested.emit())
+	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
 	column.add_child(back_button)
 	status_label = Label.new()
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
