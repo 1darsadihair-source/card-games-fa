@@ -7,6 +7,8 @@ This is a separate Godot 4 project inside the existing `card-games-fa` repositor
 - 3D oval-table composition built from meshes
 - Felt surface, metallic trim, world environment, key/fill/rim lights and shadows
 - Four seats and card backs
+- A shuffled 52-card deck and 13 real cards dealt to the local hand
+- Reusable pure GDScript rules module for deck creation, dealing, legal-suit following, trick winner, teams and a baseline AI card selector
 - Raised card geometry with suit/rank labels
 - Touch/mouse interaction and a card-play tween
 - Persian-first presentation
