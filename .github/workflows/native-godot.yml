@@ -28,3 +28,5 @@ jobs:
         run: godot --headless --path native-godot --script res://tests/rules_smoke_test.gd
       - name: Run match session test
         run: godot --headless --path native-godot --script res://tests/game_session_smoke_test.gd
+      - name: Run avatar creator smoke test
+        run: godot --headless --path native-godot --script res://tests/avatar_creator_smoke_test.gd
