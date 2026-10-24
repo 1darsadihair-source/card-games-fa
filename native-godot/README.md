@@ -19,7 +19,7 @@ This is a separate Godot 4 project inside the existing `card-games-fa` repositor
 
 ## Important limitations
 
-This is a visual interaction prototype, not yet the complete Hokm game engine. The current hand is illustrative; turn validation, proper 52-card dealing, complete rules, sound, user settings and online play still need implementation. Do not describe this prototype as store-ready.
+This is a visual interaction prototype, not yet the complete Chahar Barg game engine. The current hand is illustrative; turn validation, proper 52-card dealing, complete rules, sound, user settings and online play still need implementation. Do not describe this prototype as store-ready.
 
 ## Cross-platform export
 
