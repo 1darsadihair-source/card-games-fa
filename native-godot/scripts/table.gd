@@ -71,11 +71,13 @@ func _build_lighting() -> void:
 
 func _build_camera() -> void:
     var camera := Camera3D.new()
-    camera.position = Vector3(0, 10.8, 12.5)
-    camera.fov = 39
+    # Seat-level over-the-shoulder framing: the player's own cards stay closest,
+    # while all three opponents' faces and hidden card backs remain visible.
+    camera.position = Vector3(0, 8.2, 10.6)
+    camera.fov = 47
     camera.current = true
     add_child(camera)
-    camera.look_at(Vector3(0, 0.1, 0), Vector3.UP)
+    camera.look_at(Vector3(0, 0.72, -0.35), Vector3.UP)
 
 func _build_table() -> void:
     var shadow_base := MeshInstance3D.new()
@@ -141,43 +143,102 @@ func _label(text: String, pos: Vector3, size: float, color: Color = Color("#f6ed
     return label
 
 func _build_seats() -> void:
-    _seat("حریف", Vector3(0, 0.24, -3.5), Vector3(0, 0, 0))
-    _seat("هم‌تیمی", Vector3(-3.15, 0.24, -0.1), Vector3(0, 90, 0))
-    _seat("حریف", Vector3(3.15, 0.24, -0.1), Vector3(0, -90, 0))
+    _seat("یار شما", Vector3(0, 0.24, -3.55), Vector3(0, 180, 0), Color("#426b88"), Color("#d7ae88"))
+    _seat("رقیب چپ", Vector3(-3.45, 0.24, -0.15), Vector3(0, 90, 0), Color("#6c4b78"), Color("#b98162"))
+    _seat("رقیب راست", Vector3(3.45, 0.24, -0.15), Vector3(0, -90, 0), Color("#8a623e"), Color("#e0bc98"))
     _label("چهاربرگ", Vector3(0, 0.23, -1.25), 0.24, Color("#d8b56b"))
 
-func _seat(title: String, pos: Vector3, rot: Vector3) -> void:
+func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_color: Color) -> void:
     var root := Node3D.new()
     root.position = pos
     root.rotation_degrees = rot
     add_child(root)
 
-    var pedestal := MeshInstance3D.new()
-    var mesh := CylinderMesh.new()
-    mesh.top_radius = 0.43
-    mesh.bottom_radius = 0.5
-    mesh.height = 0.12
-    pedestal.mesh = mesh
-    pedestal.material_override = _material(Color("#c9a45c"), 0.45, 0.32)
-    root.add_child(pedestal)
+    # A visible chair makes each seat read as a person sitting at the table.
+    var chair_back := MeshInstance3D.new()
+    var chair_mesh := BoxMesh.new()
+    chair_mesh.size = Vector3(0.92, 1.05, 0.18)
+    chair_back.mesh = chair_mesh
+    chair_back.position = Vector3(0, 0.48, -0.24)
+    chair_back.material_override = _material(Color("#38251d"), 0.08, 0.52)
+    root.add_child(chair_back)
 
-    var avatar := MeshInstance3D.new()
-    var sphere := SphereMesh.new()
-    sphere.radius = 0.34
-    sphere.height = 0.68
-    avatar.mesh = sphere
-    avatar.position.y = 0.43
-    avatar.material_override = _material(Color("#1b3026"), 0.1, 0.4)
-    root.add_child(avatar)
+    var seat_pad := MeshInstance3D.new()
+    var pad_mesh := BoxMesh.new()
+    pad_mesh.size = Vector3(0.94, 0.16, 0.88)
+    seat_pad.mesh = pad_mesh
+    seat_pad.position = Vector3(0, 0.02, 0.1)
+    seat_pad.material_override = _material(Color("#6b3028"), 0.0, 0.8)
+    root.add_child(seat_pad)
 
-    var face := MeshInstance3D.new()
-    var face_mesh := SphereMesh.new()
-    face_mesh.radius = 0.19
-    face_mesh.height = 0.38
-    face.mesh = face_mesh
-    face.position = Vector3(0, 0.46, 0.17)
-    face.material_override = _material(Color("#d5b28a"), 0.0, 0.8)
-    root.add_child(face)
+    var torso := MeshInstance3D.new()
+    var torso_mesh := CapsuleMesh.new()
+    torso_mesh.radius = 0.36
+    torso_mesh.height = 1.12
+    torso.mesh = torso_mesh
+    torso.position = Vector3(0, 0.83, 0.13)
+    torso.rotation_degrees.x = -10
+    torso.material_override = _material(outfit_color, 0.0, 0.72)
+    root.add_child(torso)
+
+    var neck := MeshInstance3D.new()
+    var neck_mesh := CylinderMesh.new()
+    neck_mesh.top_radius = 0.105
+    neck_mesh.bottom_radius = 0.12
+    neck_mesh.height = 0.22
+    neck.mesh = neck_mesh
+    neck.position = Vector3(0, 1.38, 0.24)
+    neck.material_override = _material(skin_color, 0.0, 0.86)
+    root.add_child(neck)
+
+    var head := MeshInstance3D.new()
+    var head_mesh := SphereMesh.new()
+    head_mesh.radius = 0.28
+    head_mesh.height = 0.62
+    head.mesh = head_mesh
+    head.position = Vector3(0, 1.69, 0.25)
+    head.material_override = _material(skin_color, 0.0, 0.82)
+    root.add_child(head)
+
+    # Hair cap and simple facial features are separate parts for later avatar customization.
+    var hair := MeshInstance3D.new()
+    var hair_mesh := SphereMesh.new()
+    hair_mesh.radius = 0.285
+    hair_mesh.height = 0.28
+    hair.mesh = hair_mesh
+    hair.position = Vector3(0, 1.91, 0.23)
+    hair.material_override = _material(Color("#29211e"), 0.0, 0.9)
+    root.add_child(hair)
+
+    for eye_x in [-0.095, 0.095]:
+        var eye := MeshInstance3D.new()
+        var eye_mesh := SphereMesh.new()
+        eye_mesh.radius = 0.027
+        eye_mesh.height = 0.045
+        eye.mesh = eye_mesh
+        eye.position = Vector3(eye_x, 1.72, 0.505)
+        eye.material_override = _material(Color("#241b17"), 0.0, 0.5)
+        root.add_child(eye)
+
+    # Arms reach forward toward the felt, giving a seated card-player silhouette.
+    for side in [-1.0, 1.0]:
+        var arm := MeshInstance3D.new()
+        var arm_mesh := CapsuleMesh.new()
+        arm_mesh.radius = 0.105
+        arm_mesh.height = 0.72
+        arm.mesh = arm_mesh
+        arm.position = Vector3(side * 0.38, 0.72, 0.52)
+        arm.rotation_degrees = Vector3(65, 0, side * -12)
+        arm.material_override = _material(outfit_color, 0.0, 0.75)
+        root.add_child(arm)
+        var hand := MeshInstance3D.new()
+        var hand_mesh := SphereMesh.new()
+        hand_mesh.radius = 0.12
+        hand_mesh.height = 0.18
+        hand.mesh = hand_mesh
+        hand.position = Vector3(side * 0.39, 0.48, 0.79)
+        hand.material_override = _material(skin_color, 0.0, 0.85)
+        root.add_child(hand)
 
     var name := Label3D.new()
     name.text = title
@@ -320,8 +381,8 @@ func _play_card(card: Node3D, index: int) -> void:
 func _animate_intro() -> void:
     var camera := get_viewport().get_camera_3d()
     if camera:
-        var start := camera.position + Vector3(0, 1.2, 1.2)
+        var start := camera.position + Vector3(0, 1.0, 1.1)
         camera.position = start
         var tween := create_tween()
         tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-        tween.tween_property(camera, "position", Vector3(0, 10.8, 12.5), 1.15)
+        tween.tween_property(camera, "position", Vector3(0, 8.2, 10.6), 1.15)
