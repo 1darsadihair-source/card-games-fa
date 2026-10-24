@@ -2,8 +2,8 @@
 
 The table loader looks for these optional files:
 
-- `player.glb` — the character in the player's seat ("یار شما")
-- `opponent.glb` — the shared fallback model for the other visible seats
+- `partner.glb` — optional character for the partner across the table ("یار شما")
+- `opponent.glb` — shared model for visible opponents and fallback if `partner.glb` is absent
 
 Put licensed, clothed, rigged GLB models in this folder and keep a copy of each licence/source note here. Godot imports GLB as a PackedScene. Check each model's real-world scale, forward direction, seated pose, arm/hand placement, material appearance and Android performance before treating it as ready.
 
@@ -13,4 +13,4 @@ Recommended source for generating varied clothed characters:
 
 Do not use a nude base mesh as a shipped card-table character. Export clothed adult characters and test the exact GLB files in Godot before committing them.
 
-The loader keeps the existing procedural body as a fallback when the files are absent. No realistic GLB model is included in this folder yet.
+The loader keeps the existing procedural body as a fallback when the files are absent. No realistic GLB model is included in this folder yet. The code integration is a loader only; it does not create or download model files.
