@@ -8,7 +8,7 @@ const RANKS := ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"
 var selected_card := -1
 var hand_nodes: Array[Node3D] = []
 var status_label: Label3D
-var card_faces: Array[String] = ["A♠", "K♥", "10♣", "Q♦", "7♠", "J♣", "4♥", "9♦", "A♣", "6♠", "8♥", "K♦", "3♣"]
+var card_faces: Array[String] = ["A♠", "K♥", "10♣", "Q♦"]
 
 func _ready() -> void:
     _build_lighting()
@@ -75,8 +75,9 @@ func _build_table() -> void:
     base_mesh.top_radius = 5.2
     base_mesh.bottom_radius = 5.2
     base_mesh.height = 0.62
-    base_mesh.radial_segments = 96
+    base_mesh.radial_segments = 128
     shadow_base.mesh = base_mesh
+    shadow_base.scale.x = 1.22
     shadow_base.position.y = -0.35
     shadow_base.material_override = _material(Color("#33251a"), 0.25, 0.29)
     add_child(shadow_base)
@@ -86,8 +87,9 @@ func _build_table() -> void:
     trim_mesh.top_radius = 5.18
     trim_mesh.bottom_radius = 5.18
     trim_mesh.height = 0.16
-    trim_mesh.radial_segments = 96
+    trim_mesh.radial_segments = 128
     trim.mesh = trim_mesh
+    trim.scale.x = 1.22
     trim.position.y = -0.04
     trim.material_override = _material(Color("#c7a45b"), 0.72, 0.25)
     add_child(trim)
@@ -97,8 +99,9 @@ func _build_table() -> void:
     felt_mesh.top_radius = 5.08
     felt_mesh.bottom_radius = 5.08
     felt_mesh.height = 0.14
-    felt_mesh.radial_segments = 96
+    felt_mesh.radial_segments = 128
     felt.mesh = felt_mesh
+    felt.scale.x = 1.22
     felt.position.y = 0.07
     felt.material_override = _material(Color("#155238"), 0.02, 0.92)
     add_child(felt)
@@ -111,6 +114,7 @@ func _build_table() -> void:
     ring_mesh.rings = 8
     ring_mesh.ring_segments = 128
     ring.mesh = ring_mesh
+    ring.scale.x = 1.22
     ring.position.y = 0.145
     ring.material_override = _material(Color("#d8b56b"), 0.68, 0.32)
     add_child(ring)
@@ -132,7 +136,7 @@ func _build_seats() -> void:
     _seat("حریف", Vector3(0, 0.24, -3.5), Vector3(0, 0, 0))
     _seat("هم‌تیمی", Vector3(-3.15, 0.24, -0.1), Vector3(0, 90, 0))
     _seat("حریف", Vector3(3.15, 0.24, -0.1), Vector3(0, -90, 0))
-    _label("چهاربرگ  •  میز بازی", Vector3(0, 0.23, -1.25), 0.2, Color("#d8b56b"))
+    _label("چهاربرگ", Vector3(0, 0.23, -1.25), 0.24, Color("#d8b56b"))
 
 func _seat(title: String, pos: Vector3, rot: Vector3) -> void:
     var root := Node3D.new()
@@ -220,18 +224,19 @@ func _build_center_mark() -> void:
     emblem.position = Vector3(0, 0.17, 0)
     emblem.material_override = _material(Color("#d8b56b"), 0.75, 0.3)
     add_child(emblem)
-    _label("حُکم", Vector3(0, 0.19, 0), 0.23, Color("#f2d18a"))
+    _label("چهاربرگ", Vector3(0, 0.19, 0), 0.19, Color("#f2d18a"))
 
 func _build_hud() -> void:
-    status_label = _label("برای شروع، یکی از کارت‌هایت را انتخاب کن", Vector3(0, 0.2, 2.05), 0.16, Color("#f7e8c8"))
+    status_label = _label("چهار کارت آغازین  •  برای بازی یکی را لمس کن", Vector3(0, 0.2, 2.05), 0.15, Color("#f7e8c8"))
     _label("تیم شما", Vector3(0, 0.22, 4.45), 0.17, Color("#e4c47b"))
 
 func _build_hand() -> void:
     for i in range(card_faces.size()):
         var card := _card_front(card_faces[i], i)
-        card.position = Vector3((i - 6) * 0.57, 0.24, 3.45 + abs(i - 6) * 0.035)
+        var offset := float(i) - float(card_faces.size() - 1) * 0.5
+        card.position = Vector3(offset * 0.88, 0.24, 3.48 + abs(offset) * 0.045)
         card.rotation_degrees.x = -8
-        card.rotation_degrees.y = (i - 6) * 1.1
+        card.rotation_degrees.y = offset * 2.0
         add_child(card)
         hand_nodes.append(card)
 
@@ -300,7 +305,7 @@ func _play_card(card: Node3D, index: int) -> void:
     tween.tween_property(card, "position", Vector3(0, 0.42, 0.85), 0.42)
     tween.parallel().tween_property(card, "rotation_degrees", Vector3(-8, 0, 0), 0.42)
     tween.tween_property(card, "scale", Vector3(0.92, 0.92, 0.92), 0.18)
-    status_label.text = "کارت %s بازی شد  •  نمونهٔ سه‌بعدی" % card_faces[index]
+    status_label.text = "کارت %s بازی شد  •  پیش‌نمایش تعاملی" % card_faces[index]
     await tween.finished
     card.visible = false
 
