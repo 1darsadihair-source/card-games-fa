@@ -28,6 +28,8 @@ func start_match(chosen_trump: String = "♠", first_player: int = 0, chosen_han
     hands_per_match = chosen_hands_per_match if [1, 3, 5, 7].has(chosen_hands_per_match) else 1
     hands_completed = 0
     team_hands_won = [0, 0]
+    match_over = false
+    trump_suit = chosen_trump if Rules.SUITS.has(chosen_trump) else "♠"
     _start_hand(first_player)
     state_changed.emit()
 
