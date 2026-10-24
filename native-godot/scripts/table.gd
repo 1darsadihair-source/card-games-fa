@@ -25,6 +25,7 @@ func _ready() -> void:
     _build_seats()
     _build_center_mark()
     _build_hud()
+    _build_avatar_button()
     _build_hand()
     _animate_intro()
 
@@ -386,3 +387,15 @@ func _animate_intro() -> void:
         var tween := create_tween()
         tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
         tween.tween_property(camera, "position", Vector3(0, 8.2, 10.6), 1.15)
+
+func _build_avatar_button() -> void:
+    var layer := CanvasLayer.new()
+    layer.layer = 5
+    add_child(layer)
+    var button := Button.new()
+    button.text = "ساخت کاراکتر"
+    button.position = Vector2(18, 24)
+    button.size = Vector2(210, 58)
+    button.add_theme_font_size_override("font_size", 22)
+    button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/avatar_creator.tscn"))
+    layer.add_child(button)
