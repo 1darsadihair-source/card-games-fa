@@ -1,0 +1,30 @@
+name: Native Godot checks
+
+on:
+  push:
+    paths:
+      - "native-godot/**"
+      - ".github/workflows/native-godot.yml"
+  pull_request:
+    paths:
+      - "native-godot/**"
+      - ".github/workflows/native-godot.yml"
+  workflow_dispatch:
+
+jobs:
+  godot-headless:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Godot 4.3
+        uses: chickensoft-games/setup-godot@v1
+        with:
+          version: 4.3.0
+          use-dotnet: false
+      - name: Parse project and scripts
+        run: godot --headless --editor --path native-godot --quit
+      - name: Run rules smoke test
+        run: godot --headless --path native-godot --script res://tests/rules_smoke_test.gd
+      - name: Run match session test
+        run: godot --headless --path native-godot --script res://tests/game_session_smoke_test.gd
