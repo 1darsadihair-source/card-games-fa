@@ -173,6 +173,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
     root.add_child(seat_pad)
 
     var torso := MeshInstance3D.new()
+    torso.name = "PlaceholderTorso"
     var torso_mesh := CapsuleMesh.new()
     torso_mesh.radius = 0.36
     torso_mesh.height = 1.12
@@ -183,6 +184,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
     root.add_child(torso)
 
     var neck := MeshInstance3D.new()
+    neck.name = "PlaceholderNeck"
     var neck_mesh := CylinderMesh.new()
     neck_mesh.top_radius = 0.105
     neck_mesh.bottom_radius = 0.12
@@ -193,6 +195,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
     root.add_child(neck)
 
     var head := MeshInstance3D.new()
+    head.name = "PlaceholderHead"
     var head_mesh := SphereMesh.new()
     head_mesh.radius = 0.28
     head_mesh.height = 0.62
@@ -203,6 +206,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
 
     # Hair cap and simple facial features are separate parts for later avatar customization.
     var hair := MeshInstance3D.new()
+    hair.name = "PlaceholderHair"
     var hair_mesh := SphereMesh.new()
     hair_mesh.radius = 0.285
     hair_mesh.height = 0.28
@@ -213,6 +217,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
 
     for eye_x in [-0.095, 0.095]:
         var eye := MeshInstance3D.new()
+        eye.name = "PlaceholderEye"
         var eye_mesh := SphereMesh.new()
         eye_mesh.radius = 0.027
         eye_mesh.height = 0.045
@@ -224,6 +229,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
     # Arms reach forward toward the felt, giving a seated card-player silhouette.
     for side in [-1.0, 1.0]:
         var arm := MeshInstance3D.new()
+        arm.name = "PlaceholderArm"
         var arm_mesh := CapsuleMesh.new()
         arm_mesh.radius = 0.105
         arm_mesh.height = 0.72
@@ -233,6 +239,7 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
         arm.material_override = _material(outfit_color, 0.0, 0.75)
         root.add_child(arm)
         var hand := MeshInstance3D.new()
+        hand.name = "PlaceholderHand"
         var hand_mesh := SphereMesh.new()
         hand_mesh.radius = 0.12
         hand_mesh.height = 0.18
@@ -240,6 +247,8 @@ func _seat(title: String, pos: Vector3, rot: Vector3, outfit_color: Color, skin_
         hand.position = Vector3(side * 0.39, 0.48, 0.79)
         hand.material_override = _material(skin_color, 0.0, 0.85)
         root.add_child(hand)
+
+    _apply_avatar_asset(root, title)
 
     var name := Label3D.new()
     name.text = title
@@ -399,3 +408,25 @@ func _build_avatar_button() -> void:
     button.add_theme_font_size_override("font_size", 22)
     button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/avatar_creator.tscn"))
     layer.add_child(button)
+
+
+// Optional GLB slots: add licensed models under assets/avatars and the loader
+// will use them automatically. Procedural body parts remain a safe fallback.
+func _apply_avatar_asset(seat_root: Node3D, seat_title: String) -> void:
+    var path := "res://assets/avatars/player.glb" if seat_title == "یار شما" else "res://assets/avatars/opponent.glb"
+    if not ResourceLoader.exists(path):
+        path = "res://assets/avatars/opponent.glb"
+        if not ResourceLoader.exists(path):
+            return
+    var packed := load(path) as PackedScene
+    if packed == null:
+        push_warning("Avatar asset could not be loaded: " + path)
+        return
+    var model := packed.instantiate()
+    model.name = "ImportedHumanAvatar"
+    model.position = Vector3(0, 0.12, 0.05)
+    model.scale = Vector3.ONE * 0.01
+    seat_root.add_child(model)
+    for child in seat_root.get_children():
+        if child.name.begins_with("Placeholder"):
+            child.visible = false
