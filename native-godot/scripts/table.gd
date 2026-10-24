@@ -425,8 +425,44 @@ func _apply_avatar_asset(seat_root: Node3D, seat_title: String) -> void:
     var model := packed.instantiate()
     model.name = "ImportedHumanAvatar"
     model.position = Vector3(0, 0.12, 0.05)
-    model.scale = Vector3.ONE
     seat_root.add_child(model)
+
+    # Normalize different GLB authoring scales to roughly 1.7 m tall.
+    var model_height := _avatar_height(model)
+    if model_height > 0.001:
+        model.scale = Vector3.ONE * (1.7 / model_height)
+    else:
+        push_warning("Avatar has no measurable mesh height: " + path)
+
+    # Hide only the placeholder body; preserve chair, name and card backs.
     for child in seat_root.get_children():
         if child.name.begins_with("Placeholder"):
             child.visible = false
+
+func _avatar_height(node: Node) -> float:
+    var min_y := INF
+    var max_y := -INF
+    var meshes: Array[MeshInstance3D] = []
+    _collect_meshes(node, meshes)
+    for mesh_instance in meshes:
+        if mesh_instance.mesh == null:
+            continue
+        var aabb := mesh_instance.get_aabb()
+        var corners := [
+            Vector3(aabb.position.x, aabb.position.y, aabb.position.z),
+            Vector3(aabb.end.x, aabb.position.y, aabb.position.z),
+            Vector3(aabb.position.x, aabb.end.y, aabb.position.z),
+            Vector3(aabb.position.x, aabb.position.y, aabb.end.z),
+            Vector3(aabb.end.x, aabb.end.y, aabb.end.z)
+        ]
+        for corner in corners:
+            var global_point := mesh_instance.to_global(corner)
+            min_y = minf(min_y, global_point.y)
+            max_y = maxf(max_y, global_point.y)
+    return max_y - min_y if max_y > min_y else 0.0
+
+func _collect_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
+    if node is MeshInstance3D:
+        result.append(node as MeshInstance3D)
+    for child in node.get_children():
+        _collect_meshes(child, result)
