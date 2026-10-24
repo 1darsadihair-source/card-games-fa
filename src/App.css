@@ -153,3 +153,49 @@ body{background:radial-gradient(ellipse at 50% -15%,#284b3b 0%,#10251f 48%,#0817
 @media(prefers-reduced-motion:reduce){
  .game-card,.primary-button,.header-cta,.playing-card,.trump-option{transition:none!important}
 }
+
+
+/* Premium depth pass: cinematic felt, layered surfaces and dimensional cards. */
+:root{--felt-shadow:#06140d;--brass:#e7c779;--card-ivory:#fffdf5}
+body{background:radial-gradient(ellipse at 50% 0%,#2c5842 0%,#10251f 42%,#06130d 100%);background-attachment:fixed}
+.app-shell{isolation:isolate;position:relative}
+.app-shell:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.14;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E")}
+.site-header{backdrop-filter:blur(14px)}
+.hero{perspective:1200px}
+.hero-art{transform-style:preserve-3d;perspective:1100px}
+.art-card{transform-style:preserve-3d;border:1px solid #fff;box-shadow:0 30px 55px #020805aa,0 5px 0 #c7c1b2,inset 0 0 0 4px #fff9}
+.card-a{transform:translate(-66px,-9px) rotateY(-16deg) rotateZ(-17deg) translateZ(10px)}
+.card-b{transform:translate(62px,-2px) rotateY(13deg) rotateZ(13deg) translateZ(28px)}
+.card-c{transform:translate(0,32px) rotateY(-4deg) rotateZ(2deg) translateZ(48px)}
+.art-card:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,#fff8,transparent 32%,transparent 72%,#1b24140d)}
+.art-glow{width:360px;height:360px;filter:blur(32px);background:radial-gradient(circle,#e6c16a36 0%,#b68b4714 45%,transparent 70%)}
+.orbit{box-shadow:0 0 22px #d8b87908}
+.table-area{isolation:isolate;transform:perspective(1400px) rotateX(1.2deg);background-image:radial-gradient(ellipse at 50% 40%,#2b6749 0%,#1a4934 44%,#0d281d 100%),repeating-linear-gradient(0deg,#fff0 0 3px,#ffffff03 3px 4px);box-shadow:inset 0 0 0 5px #d8b8790b,inset 0 0 0 8px #071b12aa,inset 0 0 70px #020a06aa,0 28px 65px #0007}
+.table-area:before{content:"";position:absolute;inset:16px;border:1px solid #e2c47a30;border-radius:16px;pointer-events:none;z-index:0}
+.table-area:after{inset:10px;border-color:#e2c47a1a}
+.playing-card{background:linear-gradient(145deg,#fffefa 0%,#f4f0e5 72%,#e3dfd2 100%);border:1px solid #fff;box-shadow:0 7px 0 #c8c3b6,0 11px 18px #020a0677,inset 0 0 0 3px #ffffffa6;transform:translateZ(0)}
+.hand-cards .playing-card:not(:disabled):hover{transform:translateY(-12px) rotate(-1deg) scale(1.035);box-shadow:0 10px 0 #c8c3b6,0 22px 28px #020a0688,inset 0 0 0 3px #ffffffa6}
+.playing-card:active:not(:disabled){transform:translateY(-3px) scale(.98)}
+.card-back{background:repeating-linear-gradient(45deg,#173d2b 0 4px,#2a5a40 4px 8px);box-shadow:0 5px 0 #0b2418,0 10px 15px #020a0677,inset 0 0 0 2px #d8b879,inset 0 0 0 5px #173d2b}
+.game-card{position:relative;background:linear-gradient(145deg,#f5f2e9,#e0dfd4);box-shadow:0 2px 0 #c9c6b9,0 12px 26px #10251f12}
+.game-card:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(135deg,#fff8,transparent 38%);opacity:.65}
+.game-illustration{perspective:800px}
+.mini-card{transform-style:preserve-3d;box-shadow:0 14px 22px #172d2233,0 3px 0 #c7c3b6}
+.mini-card-back{transform:translate(-19px,2px) rotateY(-14deg) rotateZ(-12deg)}
+.mini-card-front{transform:translate(26px,-3px) rotateY(12deg) rotateZ(12deg)}
+.primary-button,.header-cta{position:relative;overflow:hidden;background:linear-gradient(120deg,#f2d993,#c9a45c 55%,#e8c878);box-shadow:0 4px 0 #98763b,0 10px 25px #c9a45c24}
+.primary-button:after,.header-cta:after{content:"";position:absolute;inset:-80% auto -80% -35%;width:25%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,#ffffff66,transparent);transition:left .5s ease}
+.primary-button:hover:after,.header-cta:hover:after{left:120%}
+.avatar{background:linear-gradient(145deg,#f4dc9b,#c9a45c);box-shadow:0 4px 0 #98763b,0 7px 14px #0004}
+.opponent.active-seat{background:linear-gradient(135deg,#d8b8791b,#d8b87905);box-shadow:0 0 25px #d8b8790d}
+.trick-card{backdrop-filter:blur(8px);box-shadow:0 10px 22px #020a0688!important}
+@keyframes felt-breathe{0%,100%{opacity:.65}50%{opacity:1}}
+.live-dot{animation:felt-breathe 2.6s ease-in-out infinite}
+@media(max-width:760px){
+ .card-a{transform:translate(-51px,-6px) rotateY(-12deg) rotateZ(-17deg) translateZ(10px)}
+ .card-b{transform:translate(49px,-1px) rotateY(12deg) rotateZ(13deg) translateZ(28px)}
+ .card-c{transform:translate(0,25px) rotateY(-4deg) rotateZ(2deg) translateZ(48px)}
+ .table-area{transform:none}
+ .table-area:before{inset:10px}
+}
+@media(prefers-reduced-motion:reduce){.live-dot{animation:none!important}.primary-button:after,.header-cta:after{display:none}}
