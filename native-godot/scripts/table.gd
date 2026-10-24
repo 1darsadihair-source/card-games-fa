@@ -143,7 +143,7 @@ func _label(text: String, pos: Vector3, size: float, color: Color = Color("#f6ed
     return label
 
 func _build_seats() -> void:
-    _seat("یار شما", Vector3(0, 0.24, -3.55), Vector3(0, 180, 0), Color("#426b88"), Color("#d7ae88"))
+    _seat("یار شما", Vector3(0, 0.24, -3.55), Vector3(0, 0, 0), Color("#426b88"), Color("#d7ae88"))
     _seat("رقیب چپ", Vector3(-3.45, 0.24, -0.15), Vector3(0, 90, 0), Color("#6c4b78"), Color("#b98162"))
     _seat("رقیب راست", Vector3(3.45, 0.24, -0.15), Vector3(0, -90, 0), Color("#8a623e"), Color("#e0bc98"))
     _label("چهاربرگ", Vector3(0, 0.23, -1.25), 0.24, Color("#d8b56b"))
