@@ -1,36 +1,40 @@
-# چهاربرگ — Native 3D Prototype
+# چهاربرگ — Native 3D Mobile App
 
-This is a separate Godot 4 project inside the existing `card-games-fa` repository. It does not use Supabase and does not replace the existing web prototype.
+This is the native Godot 4 project for the FourBarg Android/iOS app, kept in the existing `card-games-fa` repository. The React/Vite web prototype remains separate and is not the native app.
 
-## Current prototype
+## Current implementation
 
-- 3D oval-table composition built from meshes
-- Felt surface, metallic trim, world environment, key/fill/rim lights and shadows
-- Four seats and card backs
-- A shuffled 52-card deck and 13 real cards dealt to the local hand
-- Reusable pure GDScript rules module for deck creation, dealing, legal-suit following, trick winner, teams and a baseline AI card selector
-- Raised card geometry with suit/rank labels
-- Touch/mouse interaction and a card-play tween
-- Persian-first presentation
+- 3D table scene with felt, metallic trim, lighting, shadows, four seats and touch/mouse card interaction.
+- Shuffled 52-card deck and 13 cards dealt to the local hand.
+- Reusable game rules module for deck creation, dealing, follow-suit legality, trick winner, teams and baseline AI selection.
+- Supabase backend scaffold: email/password Auth, user-scoped profile reads, and SQL schema with Row Level Security.
+- Supabase schema and setup notes are in `native-godot/supabase/`.
 
-## Open locally
+## Current status — not store-ready
 
-1. Install Godot 4.x.
-2. Import `native-godot/project.godot`.
-3. Run the main scene.
+The visual scene is a prototype, not a complete playable game. Full turn sequencing, game-specific rule confirmation, trump selection, complete scoring, online matchmaking, authoritative server-side match validation, audio, accessibility, UI flows, and device QA remain to be implemented. The Supabase client scaffold is not yet wired into a login UI and the backend project has not yet been provisioned or connected.
 
-## Important limitations
+## Native build
 
-This is a visual interaction prototype, not yet the complete Chahar Barg game engine. The current hand is illustrative; turn validation, proper 52-card dealing, complete rules, sound, user settings and online play still need implementation. Do not describe this prototype as store-ready.
+1. Install Godot 4.x and import `native-godot/project.godot`.
+2. Run the main scene for local iteration.
+3. Install/configure Android export templates to build an APK for device testing; produce an AAB for store release.
+4. For iOS, export to Xcode and build/sign on macOS with Xcode and the required Apple signing setup.
 
-## Cross-platform export
+The Compatibility renderer is the starting point for mobile GPU coverage. Real device performance and touch interaction must be tested before release.
 
-- Android: configure the Android export template and create an APK for device testing; make an AAB only when preparing a store release.
-- iOS: export to Xcode and build/sign on macOS with Xcode and the required Apple developer signing setup.
-- Use the Compatibility renderer as the initial baseline for broader mobile GPU support; test shadows and frame rate on actual devices.
+## Supabase setup
 
-## Architecture direction
+Use a **dedicated Supabase project for FourBarg**, not a database used by another product. See `native-godot/supabase/README.md`.
 
-- Godot client: rendering, input, animation, local game presentation.
-- Pure game rules module: deterministic dealing, legal-move validation, trick winner and scoring.
-- Later online play: separate authoritative game server using WebSockets; no Supabase dependency.
+- Apply `native-godot/supabase/001_initial_schema.sql`.
+- Configure the project URL and publishable key in the native client before using Auth.
+- Never embed a Supabase secret/service-role key in the app.
+- RLS limits profile access to the signed-in owner. Stats are read-only from the client.
+- Online game results need an authoritative server; a mobile client must not be trusted to award wins or modify scores.
+
+## Architecture
+
+- Godot: native 3D rendering, touch input, animation, local game presentation.
+- Supabase: identity, player profile, private player stats.
+- Authoritative game service (planned): online room state, move validation and score settlement.
