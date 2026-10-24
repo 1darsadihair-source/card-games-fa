@@ -15,9 +15,20 @@ This is the implementation contract for replacing the temporary primitive people
 Prefer licensed, rigged GLB/glTF assets that can be imported directly by Godot 4. Keep the licence text and source URL in the repository beside each asset. Do not commit scraped models, paid models without a licence, or naked base meshes as if they were finished clothed characters.
 
 Candidate sources to evaluate:
-- Ara 3D Gen (open-source generator based on CC0 MakeHuman data): https://github.com/olatunde85/3d-gen
-- Innerscene CC0 rigged human base mesh (use only as a technical base; it is not a finished clothed avatar): https://www.innerscene.com/tools/library/3d-parts/human-base-mesh-with-editable-53-bone-rig-8e7c8ab1
-- Other assets must be checked individually for licence, textures, skeleton, topology, and mobile suitability before inclusion.
+- **Preferred for realistic clothed adults:** Ara 3D Gen online exporter: https://ara3dgen.com/ (the project describes its code as MIT and MakeHuman-derived character data as CC0). Project details: https://github.com/olatunde85/3d-gen
+- **Fallback for stylized prototypes:** Grab3D Character Mixer: https://grab3d.com/tools/character-mixer/ (free CC0 rigged GLB, but its visual styles are stylized rather than photorealistic).
+- Innerscene CC0 rigged human base mesh: https://www.innerscene.com/tools/library/3d-parts/human-base-mesh-with-editable-53-bone-rig-8e7c8ab1 — technical base only, not a finished clothed avatar.
+- Check licence, textures, skeleton, pose, topology, and mobile suitability before inclusion.
+
+### Phone-first asset intake (manual export currently required)
+1. Open Ara 3D Gen in the phone browser and choose an adult preset.
+2. Select normal, fully clothed everyday clothing; avoid nude base meshes.
+3. Choose a game-compatible rig and export one GLB with textures embedded if offered.
+4. Repeat with distinct adult presets, skin tones, hair, and clothing for opponents.
+5. Upload the exported GLBs into `native-godot/assets/avatars/`. Use `partner.glb` for the partner and `opponent.glb` as the shared opponent fallback.
+6. Treat these as test assets first. The current loader normalizes height but does not yet rotate models, fit a seated pose, retarget animation, or attach hands to cards.
+
+This environment has not successfully downloaded the binary GLB from the asset host. No model file is added by this documentation change.
 
 ## Import and optimization checklist
 
