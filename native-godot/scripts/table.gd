@@ -425,7 +425,7 @@ func _apply_avatar_asset(seat_root: Node3D, seat_title: String) -> void:
     var model := packed.instantiate()
     model.name = "ImportedHumanAvatar"
     model.position = Vector3(0, 0.12, 0.05)
-    model.scale = Vector3.ONE * 0.01
+    model.scale = Vector3.ONE
     seat_root.add_child(model)
     for child in seat_root.get_children():
         if child.name.begins_with("Placeholder"):
