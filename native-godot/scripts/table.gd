@@ -429,10 +429,12 @@ func _apply_avatar_asset(seat_root: Node3D, seat_title: String) -> void:
     model.position = Vector3(0, 0.12, 0.05)
     seat_root.add_child(model)
 
-    # Normalize different GLB authoring scales to roughly 1.7 m tall.
+    # Normalize seated GLB assets to the expected seated silhouette height.
+    # Seated source models are commonly ~1.25–1.4 m tall; scaling them to a
+    # standing 1.7 m would make them oversized relative to the chair and table.
     var model_height := _avatar_height(model)
     if model_height > 0.001:
-        model.scale = Vector3.ONE * (1.7 / model_height)
+        model.scale = Vector3.ONE * (1.35 / model_height)
     else:
         push_warning("Avatar has no measurable mesh height: " + path)
 
