@@ -9,7 +9,8 @@ const Rules = preload("res://scripts/game_rules.gd")
 
 signal state_changed
 signal trick_completed(winner: int, team_tricks: Array)
-signal match_completed(winning_team: int, team_tricks: Array)
+signal hand_completed(winning_team: int, hands_completed: int, team_hands_won: Array)
+signal match_completed(winning_team: int, team_hands_won: Array)
 
 var hands: Array = [[], [], [], []]
 var current_player := 0
@@ -18,18 +19,25 @@ var current_trick: Array[Dictionary] = []
 var completed_tricks := 0
 var team_tricks: Array[int] = [0, 0]
 var match_over := false
+var hands_per_match := 1
+var hands_completed := 0
+var team_hands_won: Array[int] = [0, 0]
 var last_trick_winner := -1
 
-func start_match(chosen_trump: String = "♠", first_player: int = 0) -> void:
+func start_match(chosen_trump: String = "♠", first_player: int = 0, chosen_hands_per_match: int = 1) -> void:
+    hands_per_match = chosen_hands_per_match if [1, 3, 5, 7].has(chosen_hands_per_match) else 1
+    hands_completed = 0
+    team_hands_won = [0, 0]
+    _start_hand(first_player)
+    state_changed.emit()
+
+func _start_hand(first_player: int) -> void:
     hands = Rules.deal_four_players(Rules.shuffled_deck(), first_player)
     current_player = first_player
-    trump_suit = chosen_trump if Rules.SUITS.has(chosen_trump) else "♠"
     current_trick.clear()
     completed_tricks = 0
     team_tricks = [0, 0]
-    match_over = false
     last_trick_winner = -1
-    state_changed.emit()
 
 func human_legal_cards() -> Array:
     if match_over or current_player != 0:
@@ -83,9 +91,23 @@ func _play_card(player: int, card: Dictionary) -> void:
     current_player = winner
     trick_completed.emit(winner, team_tricks.duplicate())
     if completed_tricks >= 13:
+        _finish_hand(winner)
+
+func _finish_hand(last_winner: int) -> void:
+    hands_completed += 1
+    var hand_winner := 0 if team_tricks[0] > team_tricks[1] else 1
+    team_hands_won[hand_winner] += 1
+    hand_completed.emit(hand_winner, hands_completed, team_hands_won.duplicate())
+    if hands_completed >= hands_per_match:
         match_over = true
-        var winning_team := 0 if team_tricks[0] > team_tricks[1] else 1
-        match_completed.emit(winning_team, team_tricks.duplicate())
+        var winning_team := -1
+        if team_hands_won[0] > team_hands_won[1]:
+            winning_team = 0
+        elif team_hands_won[1] > team_hands_won[0]:
+            winning_team = 1
+        match_completed.emit(winning_team, team_hands_won.duplicate())
+    else:
+        _start_hand(last_winner)
 
 func _find_card(hand: Array, card_id: String) -> Dictionary:
     for card in hand:
