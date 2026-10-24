@@ -20,6 +20,17 @@ Candidate sources to evaluate:
 - Innerscene CC0 rigged human base mesh: https://www.innerscene.com/tools/library/3d-parts/human-base-mesh-with-editable-53-bone-rig-8e7c8ab1 — technical base only, not a finished clothed avatar.
 - Check licence, textures, skeleton, pose, topology, and mobile suitability before inclusion.
 
+### Verified seated-model candidates
+
+The following source pages explicitly describe clothed, seated static GLB models released under CC0, making them more appropriate for the first table-fit test than standing figures:
+
+- Seated upright, charcoal suit, ~93k triangles: https://www.innerscene.com/tools/library/3d-parts/seated-upright-3d-person-seated-c6901f24
+- Seated leaning forward, T-shirt and jeans, ~90k triangles: https://www.innerscene.com/tools/library/3d-parts/seated-leaning-forward-3d-person-seated-54eefd12
+- Seated conversation, ~86k triangles: https://www.innerscene.com/tools/library/3d-parts/seated-conversation-3d-person-seated-c5931842
+- Seated turning aside, ~85k triangles: https://www.innerscene.com/tools/library/3d-parts/seated-turning-aside-3d-person-seated-2c3739dd
+
+These are source candidates only; no binary GLB has been added. They are static meshes and may not have the exact card-playing hand pose. Inspect and fit the downloaded files before replacing placeholders. The loader now targets about 1.35 m mesh height for seated assets; confirm the fit visually in Godot because source bounding boxes and coordinate origins can differ.
+
 ### Phone-first asset intake (manual export currently required)
 1. Open Ara 3D Gen in the phone browser and choose an adult preset.
 2. Select normal, fully clothed everyday clothing; avoid nude base meshes.
