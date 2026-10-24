@@ -413,7 +413,9 @@ func _build_avatar_button() -> void:
 // Optional GLB slots: add licensed models under assets/avatars and the loader
 // will use them automatically. Procedural body parts remain a safe fallback.
 func _apply_avatar_asset(seat_root: Node3D, seat_title: String) -> void:
-    var path := "res://assets/avatars/player.glb" if seat_title == "یار شما" else "res://assets/avatars/opponent.glb"
+    # "یار شما" is the partner across the table, not the local human player.
+    # Use a dedicated partner model when supplied; otherwise share opponent.glb.
+    var path := "res://assets/avatars/partner.glb" if seat_title == "یار شما" else "res://assets/avatars/opponent.glb"
     if not ResourceLoader.exists(path):
         path = "res://assets/avatars/opponent.glb"
         if not ResourceLoader.exists(path):
@@ -448,13 +450,13 @@ func _avatar_height(node: Node) -> float:
         if mesh_instance.mesh == null:
             continue
         var aabb := mesh_instance.get_aabb()
-        var corners := [
-            Vector3(aabb.position.x, aabb.position.y, aabb.position.z),
-            Vector3(aabb.end.x, aabb.position.y, aabb.position.z),
-            Vector3(aabb.position.x, aabb.end.y, aabb.position.z),
-            Vector3(aabb.position.x, aabb.position.y, aabb.end.z),
-            Vector3(aabb.end.x, aabb.end.y, aabb.end.z)
-        ]
+        # Transform all eight AABB corners; partial corner sampling can
+        # underestimate height when a mesh is rotated or nested under transforms.
+        var corners := []
+        for x in [aabb.position.x, aabb.end.x]:
+            for y in [aabb.position.y, aabb.end.y]:
+                for z in [aabb.position.z, aabb.end.z]:
+                    corners.append(Vector3(x, y, z))
         for corner in corners:
             var global_point := mesh_instance.to_global(corner)
             min_y = minf(min_y, global_point.y)
