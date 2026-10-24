@@ -1,0 +1,1 @@
+Scripts for the Godot native client. Keep game rules separate from rendering code as the prototype grows.
