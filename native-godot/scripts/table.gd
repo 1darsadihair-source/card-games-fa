@@ -1,6 +1,8 @@
 extends Node3D
 
-const CARD_W := 0.72
+const Rules = preload("res://scripts/game_rules.gd")
+
+const CARD_W := 0.58
 const CARD_H := 1.05
 const SUITS := ["♠", "♥", "♦", "♣"]
 const RANKS := ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"]
@@ -8,9 +10,15 @@ const RANKS := ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"
 var selected_card := -1
 var hand_nodes: Array[Node3D] = []
 var status_label: Label3D
-var card_faces: Array[String] = ["A♠", "K♥", "10♣", "Q♦"]
+var card_faces: Array[String] = []
+var hand_data: Array[Dictionary] = []
 
 func _ready() -> void:
+    var deck := Rules.shuffled_deck()
+    var dealt: Array = Rules.deal_four_players(deck)
+    hand_data = dealt[0]
+    for card in hand_data:
+        card_faces.append("%s%s" % [card["rank"], card["suit"]])
     _build_lighting()
     _build_camera()
     _build_table()
@@ -227,14 +235,14 @@ func _build_center_mark() -> void:
     _label("چهاربرگ", Vector3(0, 0.19, 0), 0.19, Color("#f2d18a"))
 
 func _build_hud() -> void:
-    status_label = _label("چهار کارت آغازین  •  برای بازی یکی را لمس کن", Vector3(0, 0.2, 2.05), 0.15, Color("#f7e8c8"))
+    status_label = _label("دست ۱۳ کارتی شما  •  برای بازی یک کارت را لمس کن", Vector3(0, 0.2, 2.05), 0.15, Color("#f7e8c8"))
     _label("تیم شما", Vector3(0, 0.22, 4.45), 0.17, Color("#e4c47b"))
 
 func _build_hand() -> void:
     for i in range(card_faces.size()):
         var card := _card_front(card_faces[i], i)
         var offset := float(i) - float(card_faces.size() - 1) * 0.5
-        card.position = Vector3(offset * 0.88, 0.24, 3.48 + abs(offset) * 0.045)
+        card.position = Vector3(offset * 0.39, 0.24, 3.48 + abs(offset) * 0.025)
         card.rotation_degrees.x = -8
         card.rotation_degrees.y = offset * 2.0
         add_child(card)
@@ -305,7 +313,7 @@ func _play_card(card: Node3D, index: int) -> void:
     tween.tween_property(card, "position", Vector3(0, 0.42, 0.85), 0.42)
     tween.parallel().tween_property(card, "rotation_degrees", Vector3(-8, 0, 0), 0.42)
     tween.tween_property(card, "scale", Vector3(0.92, 0.92, 0.92), 0.18)
-    status_label.text = "کارت %s بازی شد  •  پیش‌نمایش تعاملی" % card_faces[index]
+    status_label.text = "کارت %s بازی شد  •  نمای آزمایشی" % card_faces[index]
     await tween.finished
     card.visible = false
 
